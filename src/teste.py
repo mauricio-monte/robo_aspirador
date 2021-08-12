@@ -1,3 +1,6 @@
+from aspirador import Aspirador
+from cenario import Sala
+
 # Código de teste
 ######################
 #criar aspirador com 100% de energia
