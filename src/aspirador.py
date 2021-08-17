@@ -16,37 +16,42 @@ class Aspirador:
             return 'clean'
         return 'walk'
 
-    def update_position(self):
-        y = self.location[0]
-        x = self.location[1]
-        direcao = "direita"
+    def update_position(self, direcao="direita"):
+        if(self.bateria<=0):
+            return
+        x = self.location[0]
+        y = self.location[1]
         
         if direcao == "direita":
-            if y < len(self.piso[0]) - 1:
-                self.location[1] += 1
+            if x < len(self.piso[0]) - 1:
+                self.location[0] += 1
             else:
                 direcao = "baixo"
+                self.update_position("baixo")
 
         elif direcao == "esquerda": 
-            if  x == 0:
-                self.location[1] -= 1
-            else:
-                direcao = "cima"
-
-        elif direcao == "cima": 
-            if y == 0:
+            if  x > 0:
                 self.location[0] -= 1
             else:
+                direcao = "cima"
+                self.update_position("cima")
+
+        elif direcao == "cima": 
+            if y > 0:
+                self.location[1] -= 1
+            else:
                 direcao = "direita"
+                self.update_position("direita")
 
         elif direcao == "baixo": 
             if y < len(self.piso) - 1:
-                self.location[0] += 1
+                self.location[1] += 1
             else:
                 direcao = "esquerda"
+                self.update_position("esquerda")
 
         self.bateria -= 1
-        return self.location
+        return (self.location, direcao)
 
     def clean(self, estado_do_piso):
         if estado_do_piso == PISO_SUJO:

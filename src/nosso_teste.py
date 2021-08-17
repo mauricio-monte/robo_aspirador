@@ -17,4 +17,4 @@ sala.adiciona_sujeira((2,5))
 sala.remove_sujeira((5,5))
 
 
-sala.run(20)
+sala.run(100)

@@ -6,6 +6,7 @@ class Sala:
     vazio = 0
     obstaculo = 1
     sujeira = 2
+    direcao_do_aspirador = "direita"
 
     def __init__(self, tamanho_sala, lista_obstaculos, hot_spots_sujeira, aspirador, posicao_aspirador, posicao_base_recarregamento):
         self.piso = np.zeros(list(tamanho_sala), int)
@@ -14,7 +15,11 @@ class Sala:
         self.aspirador = aspirador
         self.lista_obstaculos = lista_obstaculos
         self.hot_spots_sujeira = hot_spots_sujeira
-
+        imprime_estado_simulacao(
+            self.piso, self.aspirador.piso, self.posicao_agente,
+            self.posicao_base_carregamento, self.hot_spots_sujeira,
+            self.lista_obstaculos
+        )
     def recuperar_estado_piso(self, coordenada):
         """Mostra o que em uma célula da sala em uma determinada posição"""
         x = coordenada[0]
@@ -51,7 +56,9 @@ class Sala:
 
     def run(self, steps=50):  # chama step N vezes para simular o agente e o seu ambiente
         for step in range(steps):
-            print('\nxxxxxxxxxxxxxxxxxxxx Step ', step, ' xxxxxxxxxxxxxxxxxxxx')
+            if self.aspirador.bateria<=0:
+                return
+            print('\nxxxxxxxxxxxxxxxxxxxx Step ', step+1, ' xxxxxxxxxxxxxxxxxxxx')
             self.step()
             print('Agent Position: ', self.posicao_agente)
             print(f'Bateria do Agente: {self.aspirador.bateria}')
@@ -63,9 +70,8 @@ class Sala:
 
     def execute_action(self, agent, action):
         '''Changes the state of the environment based on what the agent does.'''
-
         if action == "walk":
-            self.posicao_agente = agent.update_position()
+            self.posicao_agente, self.direcao_do_aspirador = list(agent.update_position(self.direcao_do_aspirador))
 
         elif action == "clean":
             estado_do_piso = self.recuperar_estado_piso(agent.location)
