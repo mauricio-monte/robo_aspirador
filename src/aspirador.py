@@ -12,7 +12,8 @@ class Aspirador:
         self.piso = np.zeros(list(tamanho_sala), int)
     
     def program(self, estado_piso):
-        if estado_piso == PISO_SUJO:
+
+        if estado_piso[0] == PISO_SUJO:
             return 'clean'
         return 'walk'
 
@@ -54,9 +55,15 @@ class Aspirador:
         return (self.location, direcao)
 
     def clean(self, estado_do_piso):
-        if estado_do_piso == PISO_SUJO:
-            self.bateria -= 5
-            return True
+        if self.bateria > 5:
+            if estado_do_piso == PISO_SUJO:
+                self.bateria -= 5
+
+                y = self.location[0]
+                x = self.location[1]
+
+                self.piso[y][x] += 1
+                return True
         return False
 
     def get_bateria(self):

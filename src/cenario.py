@@ -17,17 +17,22 @@ class Sala:
         self.posicao_base_carregamento = list(posicao_base_recarregamento)
         self.aspirador = aspirador
         self.lista_obstaculos = lista_obstaculos
+        self.adiciona_obstaculos()
         self.hot_spots_sujeira = hot_spots_sujeira
         imprime_estado_simulacao(
             self.piso, self.aspirador.piso, self.posicao_agente,
             self.posicao_base_carregamento, self.hot_spots_sujeira,
             self.lista_obstaculos
         )
+        
     def recuperar_estado_piso(self, coordenada):
-        """Mostra o que em uma célula da sala em uma determinada posição"""
-        x = coordenada[0]
-        y = coordenada[1]
-        return self.piso[x][y]
+        """Mostra o que tem uma célula da sala em uma determinada posição"""
+        y = coordenada[0]
+        x = coordenada[1]
+        if(x>=0 and y>=0):
+            if(len(self.piso) > y and len(self.piso[0]) > x):
+                return self.piso[x][y]
+        return -1
 
     def suja_tudo(self):
         for i in range(0, len(self.piso)):
@@ -42,25 +47,16 @@ class Sala:
                 # if probabilidade_de_sujeira <= numero_aleatorio 
                 #     adiciona_sujeira([])
 
-    def is_hot_spots(self, coordenada):
-        x = coordenada[0]
-        y = coordenada[1]
-        if [x,y] in self.hot_spots_sujeira:
-            return True
-
     def adiciona_sujeira(self, coordenada):
         x = coordenada[0]
         y = coordenada[1]
-        # n = np.random.random_integers(0, 100)
-
-        # if coordenada in self.hot_spots_sujeira:
-        #     if n <= 30:
-        #         self.piso[x][y] = 2
-        # else:
-        #     if n <= 5:
-        #         self.piso[x][y] = 2
-
         self.piso[x][y] = 2
+
+    def adiciona_obstaculos(self):
+        for coordenada in self.lista_obstaculos:
+            x = coordenada[0]
+            y = coordenada[1]
+            self.piso[x][y] = 1
 
     def get_agent_position(self):
         print(f'Agent Position: (x={self.posicao_agente[1]}, y={self.posicao_agente[0]})')
@@ -72,7 +68,16 @@ class Sala:
 
     def percept(self, agent_position):
         """Mostra para o agente o estado do piso na posição dele"""
-        return self.recuperar_estado_piso(agent_position)
+        y = agent_position[0]
+        x = agent_position[1]
+
+        atual = self.recuperar_estado_piso([y,x])
+        cima = self.recuperar_estado_piso([y - 1,x])
+        direita = self.recuperar_estado_piso([y,x + 1])
+        baixo = self.recuperar_estado_piso([y + 1,x])
+        esquerda =self.recuperar_estado_piso([y,x - 1])
+        
+        return [atual, cima, direita, baixo, esquerda]
 
     def step(self):
         acao_agente = self.aspirador.program(self.percept(self.posicao_agente))
