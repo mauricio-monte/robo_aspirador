@@ -19,33 +19,33 @@ class Aspirador:
     def update_position(self, direcao="direita"):
         if(self.bateria<=0):
             return
-        x = self.location[0]
-        y = self.location[1]
+        y = self.location[0]
+        x = self.location[1]
         
         if direcao == "direita":
             if x < len(self.piso[0]) - 1:
-                self.location[0] += 1
+                self.location[1] += 1
             else:
                 direcao = "baixo"
                 self.update_position("baixo")
 
         elif direcao == "esquerda": 
             if  x > 0:
-                self.location[0] -= 1
+                self.location[1] -= 1
             else:
                 direcao = "cima"
                 self.update_position("cima")
 
         elif direcao == "cima": 
             if y > 0:
-                self.location[1] -= 1
+                self.location[0] -= 1
             else:
                 direcao = "direita"
                 self.update_position("direita")
 
         elif direcao == "baixo": 
             if y < len(self.piso) - 1:
-                self.location[1] += 1
+                self.location[0] += 1
             else:
                 direcao = "esquerda"
                 self.update_position("esquerda")

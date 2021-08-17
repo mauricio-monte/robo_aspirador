@@ -6,9 +6,9 @@ NAO_EXPLORADO = 5
 def imprime_estado_simulacao(estado_sala, modelo_ambiente, posicao_aspirador, posicao_carregador, hotspots, obstaculos):
         titulos_matrizes = "              Sala                  Sala, dentro do aspirador                Contadores"
         representacao = ""
-        for n_coluna in range(len(estado_sala)):
+        for n_linha in range(len(estado_sala)):
             representacao += "|"
-            for n_linha in range(len(estado_sala[0])):
+            for n_coluna in range(len(estado_sala[0])):
                 valor_celula = estado_sala[n_linha][n_coluna]
                 cor = ""
 

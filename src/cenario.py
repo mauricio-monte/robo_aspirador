@@ -1,4 +1,5 @@
 import numpy as np
+import time
 
 from exibir_estado import imprime_estado_simulacao
 
@@ -7,6 +8,8 @@ class Sala:
     obstaculo = 1
     sujeira = 2
     direcao_do_aspirador = "direita"
+    probabilidade_de_sujeira = 1
+    probabilidade_de_sujeira_hot_spot = 10
 
     def __init__(self, tamanho_sala, lista_obstaculos, hot_spots_sujeira, aspirador, posicao_aspirador, posicao_base_recarregamento):
         self.piso = np.zeros(list(tamanho_sala), int)
@@ -26,6 +29,25 @@ class Sala:
         y = coordenada[1]
         return self.piso[x][y]
 
+    def suja_tudo(self):
+        for i in range(0, len(self.piso)):
+            for j in range(0, len(self.piso[0])):
+                numero_aleatorio = np.random.random_integers(100)
+                if([i, j] in self.hot_spots_sujeira):
+                    if(numero_aleatorio <=self.probabilidade_de_sujeira_hot_spot):
+                        self.adiciona_sujeira([i,j])
+                else:
+                     if(numero_aleatorio <= self.probabilidade_de_sujeira):
+                        self.adiciona_sujeira([i,j])
+                # if probabilidade_de_sujeira <= numero_aleatorio 
+                #     adiciona_sujeira([])
+
+    def is_hot_spots(self, coordenada):
+        x = coordenada[0]
+        y = coordenada[1]
+        if [x,y] in self.hot_spots_sujeira:
+            return True
+
     def adiciona_sujeira(self, coordenada):
         x = coordenada[0]
         y = coordenada[1]
@@ -39,6 +61,9 @@ class Sala:
         #         self.piso[x][y] = 2
 
         self.piso[x][y] = 2
+
+    def get_agent_position(self):
+        print(f'Agent Position: (x={self.posicao_agente[1]}, y={self.posicao_agente[0]})')
 
     def remove_sujeira(self, coordenada):
         x = coordenada[0]
@@ -60,13 +85,15 @@ class Sala:
                 return
             print('\nxxxxxxxxxxxxxxxxxxxx Step ', step+1, ' xxxxxxxxxxxxxxxxxxxx')
             self.step()
-            print('Agent Position: ', self.posicao_agente)
+            self.get_agent_position()
             print(f'Bateria do Agente: {self.aspirador.bateria}')
+            self.suja_tudo()
             imprime_estado_simulacao(
                 self.piso, self.aspirador.piso, self.posicao_agente,
                 self.posicao_base_carregamento, self.hot_spots_sujeira,
                 self.lista_obstaculos
             )
+            time.sleep(1)
 
     def execute_action(self, agent, action):
         '''Changes the state of the environment based on what the agent does.'''
