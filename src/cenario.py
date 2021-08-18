@@ -11,27 +11,24 @@ class Sala:
     probabilidade_de_sujeira = 1
     probabilidade_de_sujeira_hot_spot = 10
 
-    def __init__(self, tamanho_sala, lista_obstaculos, hot_spots_sujeira, aspirador, posicao_aspirador, posicao_base_recarregamento):
-        self.piso = np.zeros(list(tamanho_sala), int)
+    def __init__(self, tamanho_sala, lista_obstaculos, hot_spots_sujeira,
+                 aspirador, posicao_aspirador, posicao_base_recarregamento):
+        linhas = tamanho_sala[0]
+        colunas = tamanho_sala[1]
+        self.piso = np.zeros([linhas, colunas], int)
         self.posicao_agente = list(posicao_aspirador)
         self.posicao_base_carregamento = list(posicao_base_recarregamento)
         self.aspirador = aspirador
         self.lista_obstaculos = lista_obstaculos
-        self.adiciona_obstaculos()
         self.hot_spots_sujeira = hot_spots_sujeira
-        imprime_estado_simulacao(
-            self.piso, self.aspirador.piso, self.posicao_agente,
-            self.posicao_base_carregamento, self.hot_spots_sujeira,
-            self.lista_obstaculos
-        )
+        self.adiciona_obstaculos()
+
         
-    def recuperar_estado_piso(self, coordenada):
-        """Mostra o que tem uma célula da sala em uma determinada posição"""
-        y = coordenada[0]
-        x = coordenada[1]
-        if(x>=0 and y>=0):
-            if(len(self.piso) > y and len(self.piso[0]) > x):
-                return self.piso[x][y]
+    def recuperar_estado_piso(self, linha, coluna):
+        """Mostra o que tem uma célula da sala em uma determinada posição"""       
+        if(coluna>=0 and linha>=0):
+            if(len(self.piso) > linha and len(self.piso[0]) > coluna):
+                return self.piso[linha][coluna]
         return -1
 
     def suja_tudo(self):
@@ -40,59 +37,64 @@ class Sala:
                 numero_aleatorio = np.random.random_integers(100)
                 if([i, j] in self.hot_spots_sujeira):
                     if(numero_aleatorio <=self.probabilidade_de_sujeira_hot_spot):
-                        self.adiciona_sujeira([i,j])
+                        self.adiciona_sujeira(i,j)
                 else:
                      if(numero_aleatorio <= self.probabilidade_de_sujeira):
-                        self.adiciona_sujeira([i,j])
+                        self.adiciona_sujeira(i,j)
                 # if probabilidade_de_sujeira <= numero_aleatorio 
                 #     adiciona_sujeira([])
 
-    def adiciona_sujeira(self, coordenada):
-        x = coordenada[0]
-        y = coordenada[1]
-        self.piso[x][y] = 2
+    def adiciona_sujeira(self, linha, coluna):
+        self.piso[linha][coluna] = 2
 
     def adiciona_obstaculos(self):
         for coordenada in self.lista_obstaculos:
-            x = coordenada[0]
-            y = coordenada[1]
-            self.piso[x][y] = 1
+            linha = coordenada[0]
+            coluna = coordenada[1]
+            self.piso[linha][coluna] = 1
 
     def get_agent_position(self):
-        print(f'Agent Position: (x={self.posicao_agente[1]}, y={self.posicao_agente[0]})')
+        return (f'Agent Position: (x={self.posicao_agente[1]}, y={self.posicao_agente[0]})')
 
-    def remove_sujeira(self, coordenada):
-        x = coordenada[0]
-        y = coordenada[1]
-        self.piso[x][y] = 0
+    def remove_sujeira(self, linha, coluna):
+        self.piso[linha][coluna] = 0
 
     def percept(self, agent_position):
         """Mostra para o agente o estado do piso na posição dele"""
-        y = agent_position[0]
-        x = agent_position[1]
-
-        atual = self.recuperar_estado_piso([y,x])
-        cima = self.recuperar_estado_piso([y - 1,x])
-        direita = self.recuperar_estado_piso([y,x + 1])
-        baixo = self.recuperar_estado_piso([y + 1,x])
-        esquerda =self.recuperar_estado_piso([y,x - 1])
+        linha = agent_position[0]
+        coluna = agent_position[1]
         
-        return [atual, cima, direita, baixo, esquerda]
+        return {
+            "atual": self.recuperar_estado_piso(linha, coluna),
+            "cima": self.recuperar_estado_piso(linha - 1, coluna),
+            "direita": self.recuperar_estado_piso(linha, coluna + 1),
+            "baixo": self.recuperar_estado_piso(linha + 1, coluna),
+            "esquerda": self.recuperar_estado_piso(linha, coluna - 1)
+        }
 
     def step(self):
-        acao_agente = self.aspirador.program(self.percept(self.posicao_agente))
-        print(acao_agente)
+        estado_pisos_percepcao = self.percept(self.posicao_agente)
+        acao_agente = self.aspirador.program(estado_pisos_percepcao)
+        print("Ação agente", acao_agente)
         self.execute_action(self.aspirador, acao_agente)
 
     def run(self, steps=50):  # chama step N vezes para simular o agente e o seu ambiente
+        print('\nxxxxxxxxxxxxxxxxxxxx Estado Inicial xxxxxxxxxxxxxxxxxxxx')
+        print(f'Agente:{self.get_agent_position()} Bateria: {self.aspirador.bateria}')
+        imprime_estado_simulacao(
+                self.piso, self.aspirador.piso, self.posicao_agente,
+                self.posicao_base_carregamento, self.hot_spots_sujeira,
+                self.lista_obstaculos
+            )
+        time.sleep(1)
         for step in range(steps):
             if self.aspirador.bateria<=0:
                 return
-            print('\nxxxxxxxxxxxxxxxxxxxx Step ', step+1, ' xxxxxxxxxxxxxxxxxxxx')
-            self.step()
-            self.get_agent_position()
-            print(f'Bateria do Agente: {self.aspirador.bateria}')
             self.suja_tudo()
+            self.step() 
+
+            print(f'Agente:{self.get_agent_position()} Bateria: {self.aspirador.bateria}')
+            print('\nxxxxxxxxxxxxxxxxxxxx Step ', step+1, ' xxxxxxxxxxxxxxxxxxxx')
             imprime_estado_simulacao(
                 self.piso, self.aspirador.piso, self.posicao_agente,
                 self.posicao_base_carregamento, self.hot_spots_sujeira,
@@ -106,8 +108,10 @@ class Sala:
             self.posicao_agente, self.direcao_do_aspirador = list(agent.update_position(self.direcao_do_aspirador))
 
         elif action == "clean":
-            estado_do_piso = self.recuperar_estado_piso(agent.location)
+            linha = agent.location[0]
+            coluna = agent.location[1]
+            estado_do_piso = self.recuperar_estado_piso(linha, coluna)
             if estado_do_piso == self.sujeira:
-                self.remove_sujeira(agent.location)
+                self.remove_sujeira(linha, coluna)
                 agent.clean(estado_do_piso)
             

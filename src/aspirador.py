@@ -12,8 +12,7 @@ class Aspirador:
         self.piso = np.zeros(list(tamanho_sala), int)
     
     def program(self, estado_piso):
-
-        if estado_piso[0] == PISO_SUJO:
+        if estado_piso["atual"] == PISO_SUJO:
             return 'clean'
         return 'walk'
 
