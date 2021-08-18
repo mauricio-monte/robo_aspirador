@@ -23,7 +23,6 @@ class Sala:
         self.hot_spots_sujeira = hot_spots_sujeira
         self.adiciona_obstaculos()
 
-        
     def recuperar_estado_piso(self, linha, coluna):
         """Mostra o que tem uma célula da sala em uma determinada posição"""       
         if(coluna>=0 and linha>=0):
@@ -77,29 +76,28 @@ class Sala:
         acao_agente = self.aspirador.program(estado_pisos_percepcao)
         print("Ação agente", acao_agente)
         self.execute_action(self.aspirador, acao_agente)
+        print(f'Agente:{self.get_agent_position()} Bateria: {self.aspirador.bateria}')
+        imprime_estado_simulacao(
+                self.piso, self.aspirador.piso, self.aspirador.contadores,
+                self.posicao_agente, self.posicao_base_carregamento, self.hot_spots_sujeira,
+                self.lista_obstaculos, estado_pisos_percepcao
+        )
 
     def run(self, steps=50):  # chama step N vezes para simular o agente e o seu ambiente
         print('\nxxxxxxxxxxxxxxxxxxxx Estado Inicial xxxxxxxxxxxxxxxxxxxx')
         print(f'Agente:{self.get_agent_position()} Bateria: {self.aspirador.bateria}')
         imprime_estado_simulacao(
-                self.piso, self.aspirador.piso, self.posicao_agente,
-                self.posicao_base_carregamento, self.hot_spots_sujeira,
-                self.lista_obstaculos
+                self.piso, self.aspirador.piso, self.aspirador.contadores,
+                self.posicao_agente, self.posicao_base_carregamento, self.hot_spots_sujeira,
+                self.lista_obstaculos, []
             )
         time.sleep(1)
         for step in range(steps):
             if self.aspirador.bateria<=0:
                 return
             self.suja_tudo()
-            self.step() 
-
-            print(f'Agente:{self.get_agent_position()} Bateria: {self.aspirador.bateria}')
             print('\nxxxxxxxxxxxxxxxxxxxx Step ', step+1, ' xxxxxxxxxxxxxxxxxxxx')
-            imprime_estado_simulacao(
-                self.piso, self.aspirador.piso, self.posicao_agente,
-                self.posicao_base_carregamento, self.hot_spots_sujeira,
-                self.lista_obstaculos
-            )
+            self.step()
             time.sleep(1)
 
     def execute_action(self, agent, action):
