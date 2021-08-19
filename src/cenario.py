@@ -24,29 +24,37 @@ class Sala:
         self.agente = aspirador
         self.piso = np.zeros([linhas, colunas], int)
         self.posicao_agente = list(posicao_aspirador)
-        self.posicao_carregador = list(posicao_carregador)
         self.posicoes_hot_spots = posicoes_hot_spots
+        self.posicao_carregador = list(posicao_carregador)
+        self.agente.adiciona_posicao_carregador(posicao_carregador[0], posicao_carregador[1])
         self.adicionar_obstaculos(posicoes_obstaculos)
 
     def recuperar_estado_celula(self, linha, coluna):
         """Mostra o que tem uma célula da sala em uma determinada posição"""       
-        if coluna >= 0 and linha >= 0 :
+        if coluna >= 0 and linha >= 0:
             if len(self.piso) > linha and len(self.piso[0]) > coluna:
                 return self.piso[linha][coluna]
         return -1
     
     def sujar_sala(self):
-        """Coloca sujeiras nas células da sala aleatoriamente"""
+        """Coloca sujeira nas células da sala aleatoriamente"""
         for l in range(len(self.piso)):
             for c in range(len(self.piso[0])):
-                if self.piso[l][c] != self.obstaculo:
-                    numero_aleatorio = np.random.random_integers(100)
-                    if [l, c] in self.posicoes_hot_spots:
-                        if numero_aleatorio <=self.probabilidade_de_sujeira_hot_spot:
-                            self.adicionar_sujeira(l, c)
-                    else:
-                        if numero_aleatorio <= self.probabilidade_de_sujeira:
-                            self.adicionar_sujeira(l, c)
+                celula_eh_obstaculo = self.piso[l][c] == self.obstaculo
+                eh_hot_spot = [l, c] in self.posicoes_hot_spots
+                if not celula_eh_obstaculo:
+                    if self.celula_vai_ter_sujeira(eh_hot_spot):
+                        self.adicionar_sujeira(l, c)
+
+    def celula_vai_ter_sujeira(self, hot_spot):
+        """Sorteia se uma celula terá sujeira ou não"""
+        numero_sorteado = np.random.randint(0, 100)
+        if hot_spot:
+            if numero_sorteado <= self.probabilidade_de_sujeira_hot_spot:
+                return True
+        else:
+            if numero_sorteado <= self.probabilidade_de_sujeira:
+                return False
 
     def adicionar_sujeira(self, linha, coluna):
         """Adiciona sujeira em uma determinada célula da sala"""
@@ -116,7 +124,7 @@ class Sala:
 
     def imprimir_estado_simulacao(self, representacao_sala, representacao_agente, step):
         print(gerar_titulo(f"Step {step}", (len(self.piso[0]) + 2) * 3))
-        print(f'agente: (x={self.posicao_agente[1]}, y={self.posicao_agente[0]}) Bateria: {self.agente.bateria}')
+        print(f'Agente: (x={self.posicao_agente[1]}, y={self.posicao_agente[0]}) Bateria: {self.agente.bateria}')
         print(concatenar_representacoes(representacao_sala, representacao_agente))
         time.sleep(1)
 
