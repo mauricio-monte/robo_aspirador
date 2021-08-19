@@ -1,7 +1,12 @@
 import numpy as np
 import time
 
-from exibir_estado import imprime_estado_simulacao
+from exibicao import (
+    concatenar_representacoes,
+    colorir_celula,
+    gerar_cabecalho_matriz,
+    gerar_titulo
+)
 
 class Sala:
     vazio = 0
@@ -72,45 +77,67 @@ class Sala:
             "esquerda": self.recuperar_estado_piso(linha, coluna - 1)
         }
 
+    def coordenadas_percepcao(self, linha, coluna):
+        return [[linha - 1, coluna], [linha, coluna + 1], [linha + 1, coluna], [linha, coluna - 1]]
+
     def step(self):
         estado_pisos_percepcao = self.percept(self.posicao_agente)
         acao_agente = self.aspirador.program(estado_pisos_percepcao)
-        print("Ação agente", acao_agente)
         self.execute_action(self.aspirador, acao_agente)
-        print(f'Agente:{self.get_agent_position()} Bateria: {self.aspirador.bateria}')
-        imprime_estado_simulacao(
-                self.piso, self.aspirador.piso, self.aspirador.contadores,
-                self.posicao_agente, self.posicao_base_carregamento, self.hot_spots_sujeira,
-                self.lista_obstaculos, estado_pisos_percepcao
-        )
+
+        sala = self.gerar_representacao_sala(self.coordenadas_percepcao(*self.posicao_agente))
+        agente = self.aspirador.gerar_status(self.coordenadas_percepcao(*self.posicao_agente))
+        return sala, agente
+
 
     def run(self, steps=50):  # chama step N vezes para simular o agente e o seu ambiente
-        print('\nxxxxxxxxxxxxxxxxxxxx Estado Inicial xxxxxxxxxxxxxxxxxxxx')
-        print(f'Agente:{self.get_agent_position()} Bateria: {self.aspirador.bateria}')
-        imprime_estado_simulacao(
-                self.piso, self.aspirador.piso, self.aspirador.contadores,
-                self.posicao_agente, self.posicao_base_carregamento, self.hot_spots_sujeira,
-                self.lista_obstaculos, []
-            )
+        self.imprimir_estado_simulacao(
+            self.gerar_representacao_sala([]),
+            self.aspirador.gerar_status([]),
+            "Estado Inicial"
+        )
+
         time.sleep(1)
         for step in range(steps):
             if self.aspirador.bateria<=0:
                 return
             self.suja_tudo()
-            print('\nxxxxxxxxxxxxxxxxxxxx Step ', step+1, ' xxxxxxxxxxxxxxxxxxxx')
-            self.step()
+            sala, agente = self.step()
+            self.imprimir_estado_simulacao(sala, agente, step)
             time.sleep(1)
 
     def execute_action(self, agent, action):
-        '''Changes the state of the environment based on what the agent does.'''
+        '''Muda o estado do ambiente de acordo com as ações executadas pelo agente'''
         if action == "walk":
             self.posicao_agente, self.direcao_do_aspirador = list(agent.update_position(self.direcao_do_aspirador))
 
         elif action == "clean":
-            linha = agent.location[0]
-            coluna = agent.location[1]
+            linha = agent.posicao[0]
+            coluna = agent.posicao[1]
             estado_do_piso = self.recuperar_estado_piso(linha, coluna)
             if estado_do_piso == self.sujeira:
                 self.remove_sujeira(linha, coluna)
                 agent.clean(estado_do_piso)
-            
+
+
+    def imprimir_estado_simulacao(self, representacao_sala, representacao_agente, step):
+        print(gerar_titulo(f"Step {step}", (len(representacao_sala[0]) + 2) * 3))
+        print(f'Agente:{self.get_agent_position()} Bateria: {self.aspirador.bateria}')
+        print(concatenar_representacoes(representacao_sala, representacao_agente))
+
+
+    def gerar_representacao_sala(self, percepcao_agente):
+        representacao = gerar_cabecalho_matriz("Sala", len(self.piso[0]))
+
+        for l, linha in enumerate(self.piso):
+            representacao += f"{l}|"
+            for c in range(len(linha)):
+                valor_celula = self.piso[l][c]
+                representacao_celula = colorir_celula(
+                    l, c, valor_celula,
+                    self.posicao_agente, self.posicao_base_carregamento,
+                    self.hot_spots_sujeira, percepcao_agente)
+                representacao += representacao_celula
+            representacao += "|\n"
+
+        return representacao

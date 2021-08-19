@@ -1,21 +1,29 @@
 import numpy as np
-
+from exibir_estado import coordenadas_percepcao
+from exibicao import (
+    concatenar_representacoes,
+    colorir_celula,
+    gerar_cabecalho_matriz
+)
 PISO_LIMPO = 0
 OBSTACULO = 1
 PISO_SUJO = 2
 
 class Aspirador:
-    location = [0, 0]
+    posicao = [0, 0]
     
     def __init__(self, bateria, tamanho_sala):
         self.bateria = bateria
         self.piso = np.zeros(list(tamanho_sala), str)
         self.piso.fill("?")
         self.contadores = np.zeros(list(tamanho_sala), int)
+        self.posicao_carregador = []
+        self.possiveis_hotspots = []
+        self.percepcao_atual = []
 
     def program(self, estado_piso):
-        linha = self.location[0]
-        coluna = self.location[1]
+        linha = self.posicao[0]
+        coluna = self.posicao[1]
 
         if (estado_piso["cima"] in [0, 1, 2]):
             self.piso[linha - 1][coluna] = estado_piso["cima"]
@@ -35,47 +43,48 @@ class Aspirador:
     def update_position(self, direcao="direita"):
         if(self.bateria<=0):
             return
-        linha = self.location[0]
-        coluna = self.location[1]
+        linha = self.posicao[0]
+        coluna = self.posicao[1]
         
         if direcao == "direita":
             if coluna < len(self.piso[0]) - 1:
-                self.location[1] += 1
+                self.posicao[1] += 1
             else:
                 direcao = "baixo"
                 self.update_position("baixo")
 
         elif direcao == "esquerda": 
             if  coluna > 0:
-                self.location[1] -= 1
+                self.posicao[1] -= 1
             else:
                 direcao = "cima"
                 self.update_position("cima")
 
         elif direcao == "cima": 
             if linha > 0:
-                self.location[0] -= 1
+                self.posicao[0] -= 1
             else:
                 direcao = "direita"
                 self.update_position("direita")
 
         elif direcao == "baixo": 
             if linha < len(self.piso) - 1:
-                self.location[0] += 1
+                self.posicao[0] += 1
             else:
                 direcao = "esquerda"
                 self.update_position("esquerda")
 
         self.bateria -= 1
-        return (self.location, direcao)
+        return (self.posicao, direcao)
+
 
     def clean(self, estado_do_piso):
         if self.bateria > 5:
             if estado_do_piso == PISO_SUJO:
                 self.bateria -= 5
 
-                linha = self.location[0]
-                coluna = self.location[1]
+                linha = self.posicao[0]
+                coluna = self.posicao[1]
 
                 self.contadores[linha][coluna] += 1
                 return True
@@ -87,5 +96,34 @@ class Aspirador:
     # realizar busca heurística usando a avaliação heurística, o modelo do ambiente e a percepção corrente.
     # considerar que ele deve retornar à base quando a bateria estiver crítica
 
-    def print_status():  # imprime posição do agente, o seu modelo interno do ambiente, nível da bateria
-        pass
+    def gerar_status(self, coordenadas_percepcao):
+        """Cria representação da posição do agente, modelo interno do ambiente e os contadores"""
+        representacao_modelo_interno = self.gerar_representacao_agente(coordenadas_percepcao)
+        representacao_contadores = self.gerar_representacao_contadores()
+        return concatenar_representacoes(representacao_modelo_interno, representacao_contadores)
+
+    def gerar_representacao_agente(self, coordenadas_percepcao):
+        representacao = gerar_cabecalho_matriz("Modelo Interno do Agente", len(self.piso[0]))
+
+        for l, linha in enumerate(self.piso):
+            representacao += f"{l}|"
+            for c in range(len(linha)):
+                valor_celula = self.piso[l][c]
+                representacao_celula = colorir_celula(l, c, valor_celula,
+                                                      self.posicao, self.posicao_carregador,
+                                                      self.possiveis_hotspots, coordenadas_percepcao)
+                representacao += representacao_celula
+            representacao += "|\n"
+        
+        return representacao
+
+    def gerar_representacao_contadores(self):
+        representacao = gerar_cabecalho_matriz("Contadores", len(self.contadores[0]))
+
+        for l, linha in enumerate(self.contadores):
+            representacao += f"{l}|"
+            for celula in linha:
+                representacao += f"{celula:^3}"
+            representacao += "|\n"
+        
+        return representacao
