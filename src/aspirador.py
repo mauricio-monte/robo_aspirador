@@ -1,5 +1,5 @@
 import numpy as np
-from exibir_estado import coordenadas_percepcao
+
 from exibicao import (
     concatenar_representacoes,
     colorir_celula,
