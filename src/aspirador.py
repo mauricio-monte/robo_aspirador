@@ -95,6 +95,9 @@ class Aspirador:
     # realizar busca heurística usando a avaliação heurística, o modelo do ambiente e a percepção corrente.
     # considerar que ele deve retornar à base quando a bateria estiver crítica
 
+    def adiciona_posicao_carregador(self, linha, coluna):
+        self.posicao_carregador = [linha, coluna]
+
     def gerar_status(self, coordenadas_percepcao):
         """Cria representação da posição do agente, modelo interno do ambiente e os contadores"""
         representacao_modelo_interno = self.gerar_representacao_agente(coordenadas_percepcao)
