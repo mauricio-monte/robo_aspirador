@@ -33,15 +33,16 @@ class Sala:
     def suja_tudo(self):
         for i in range(0, len(self.piso)):
             for j in range(0, len(self.piso[0])):
-                numero_aleatorio = np.random.random_integers(100)
-                if([i, j] in self.hot_spots_sujeira):
-                    if(numero_aleatorio <=self.probabilidade_de_sujeira_hot_spot):
-                        self.adiciona_sujeira(i,j)
-                else:
-                     if(numero_aleatorio <= self.probabilidade_de_sujeira):
-                        self.adiciona_sujeira(i,j)
-                # if probabilidade_de_sujeira <= numero_aleatorio 
-                #     adiciona_sujeira([])
+                if self.piso[i][j] != self.obstaculo:
+                    numero_aleatorio = np.random.random_integers(100)
+                    if([i, j] in self.hot_spots_sujeira):
+                        if(numero_aleatorio <=self.probabilidade_de_sujeira_hot_spot):
+                            self.adiciona_sujeira(i,j)
+                    else:
+                        if(numero_aleatorio <= self.probabilidade_de_sujeira):
+                            self.adiciona_sujeira(i,j)
+                    # if probabilidade_de_sujeira <= numero_aleatorio 
+                    #     adiciona_sujeira([])
 
     def adiciona_sujeira(self, linha, coluna):
         self.piso[linha][coluna] = 2
