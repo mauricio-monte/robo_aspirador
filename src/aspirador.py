@@ -37,8 +37,8 @@ class Aspirador:
             self.piso[linha][coluna] = estado_piso["atual"]
 
         if estado_piso["atual"] == PISO_SUJO:
-            return 'limpar'
-        return 'walk'
+            return "limpar"
+        return "mover"
 
     def mover(self, direcao="direita"):
         if self.bateria <= 0:
