@@ -50,11 +50,9 @@ class Sala:
         """Sorteia se uma celula terá sujeira ou não"""
         numero_sorteado = np.random.randint(0, 100)
         if hot_spot:
-            if numero_sorteado <= self.probabilidade_de_sujeira_hot_spot:
-                return True
+            return numero_sorteado <= self.probabilidade_de_sujeira_hot_spot
         else:
-            if numero_sorteado <= self.probabilidade_de_sujeira:
-                return False
+            return numero_sorteado <= self.probabilidade_de_sujeira
 
     def adicionar_sujeira(self, linha, coluna):
         """Adiciona sujeira em uma determinada célula da sala"""
