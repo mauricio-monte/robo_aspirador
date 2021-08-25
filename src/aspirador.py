@@ -44,10 +44,10 @@ class Aspirador:
         if estado_piso["atual"] == PISO_SUJO:
             return "limpar"
         else:
-            atingiu_limite_cima = linha == 0
-            atingiu_limite_baixo = linha == len(self.piso) - 1
-            atingiu_limite_esquerda = coluna == 0
-            atingiu_limite_direita = coluna == len(self.piso[0]) - 1
+            atingiu_limite_cima = (linha == 0) or (self.piso[linha - 1][coluna] == '1')
+            atingiu_limite_baixo = (linha == len(self.piso) - 1) or (self.piso[linha + 1][coluna] == '1')
+            atingiu_limite_esquerda = (coluna == 0) or (self.piso[linha][coluna - 1] == '1')
+            atingiu_limite_direita = (coluna == len(self.piso[0]) - 1) or (self.piso[linha][coluna + 1] == '1')
            
             # Primeiro movimento da simulação
             if self.ultima_movimentacao_executada == "":
@@ -58,7 +58,7 @@ class Aspirador:
             if self.ultima_movimentacao_executada == "direita":
                 if atingiu_limite_direita:
                     movimento = self.direcao
-                else:                    
+                else:     
                     movimento = "direita"
 
             elif self.ultima_movimentacao_executada == "esquerda":
@@ -70,8 +70,11 @@ class Aspirador:
             elif self.ultima_movimentacao_executada == self.direcao:
                 if atingiu_limite_direita:
                     movimento = "esquerda"
-                elif atingiu_limite_esquerda:
-                    movimento = "direita"
+                else:
+                    if atingiu_limite_esquerda:
+                        movimento = "direita"
+                    else:
+                        movimento = "esquerda"
 
             if movimento == "baixo" and atingiu_limite_baixo:
                 self.direcao = "cima"
@@ -87,17 +90,17 @@ class Aspirador:
                 elif self.ultima_movimentacao_executada == "direita":
                     movimento = "esquerda"
 
-            print({
-                "direcao": self.direcao,
-                "ultima mov": self.ultima_movimentacao_executada,
-                "lim direita": atingiu_limite_direita,
-                "lim esquerda": atingiu_limite_esquerda,
-                "lim baixo": atingiu_limite_baixo,
-                "lim cima": atingiu_limite_cima,
-                "coluna": coluna,
-                "linha": linha,
-                "movimento": movimento
-            })
+            # print({
+            #     "direcao": self.direcao,
+            #     "ultima mov": self.ultima_movimentacao_executada,
+            #     "lim direita": atingiu_limite_direita,
+            #     "lim esquerda": atingiu_limite_esquerda,
+            #     "lim baixo": atingiu_limite_baixo,
+            #     "lim cima": atingiu_limite_cima,
+            #     "coluna": coluna,
+            #     "linha": linha,
+            #     "movimento": movimento
+            # })
             return movimento
 
 
