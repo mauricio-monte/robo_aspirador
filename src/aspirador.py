@@ -44,21 +44,28 @@ class Aspirador:
         if estado_piso["atual"] == PISO_SUJO:
             return "limpar"
         else:
-            atingiu_limite_cima = (linha == 0) or (self.piso[linha - 1][coluna] == '1')
+            atingiu_limite_cima = (linha <= 0) or (self.piso[linha - 1][coluna] == '1')
             atingiu_limite_baixo = (linha == len(self.piso) - 1) or (self.piso[linha + 1][coluna] == '1')
-            atingiu_limite_esquerda = (coluna == 0) or (self.piso[linha][coluna - 1] == '1')
+            atingiu_limite_esquerda = (coluna <= 0) or (self.piso[linha][coluna - 1] == '1')
             atingiu_limite_direita = (coluna == len(self.piso[0]) - 1) or (self.piso[linha][coluna + 1] == '1')
            
             # Primeiro movimento da simulação
             if self.ultima_movimentacao_executada == "":
-                return "direita"
+                if not atingiu_limite_direita:
+                    return "direita"
+                if not atingiu_limite_esquerda:
+                    return "esquerda"
+                if not atingiu_limite_baixo:
+                    return "baixo"
+                if not atingiu_limite_cima:
+                    return "cima"
 
             # Zigue zague
-            movimento = "?"            
+            movimento = "direita"
             if self.ultima_movimentacao_executada == "direita":
                 if atingiu_limite_direita:
                     movimento = self.direcao
-                else:     
+                else:
                     movimento = "direita"
 
             elif self.ultima_movimentacao_executada == "esquerda":
@@ -68,13 +75,14 @@ class Aspirador:
                     movimento = "esquerda"
 
             elif self.ultima_movimentacao_executada == self.direcao:
-                if atingiu_limite_direita:
+                if not atingiu_limite_direita:
+                    movimento = "direita"
+                elif not atingiu_limite_esquerda:
                     movimento = "esquerda"
-                else:
-                    if atingiu_limite_esquerda:
-                        movimento = "direita"
-                    else:
-                        movimento = "esquerda"
+                elif not atingiu_limite_cima:
+                    movimento = "cima"
+                elif not atingiu_limite_baixo:
+                    movimento = "baixo"
 
             if movimento == "baixo" and atingiu_limite_baixo:
                 self.direcao = "cima"
