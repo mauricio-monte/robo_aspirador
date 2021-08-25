@@ -109,8 +109,14 @@ class Sala:
 
     def executar_acao(self, agente, action):
         """Muda o estado do ambiente de acordo com as ações executadas pelo agente"""
-        if action == "mover":
-            self.posicao_agente, self.direcao_do_aspirador = list(agente.mover(self.direcao_do_aspirador))
+        if action == "cima":
+            self.posicao_agente, self.direcao_do_aspirador = list(agente.mover(action))
+        elif action == "baixo":
+            self.posicao_agente, self.direcao_do_aspirador = list(agente.mover(action))
+        elif action == "esquerda":
+            self.posicao_agente, self.direcao_do_aspirador = list(agente.mover(action))
+        elif action == "direita":
+            self.posicao_agente, self.direcao_do_aspirador = list(agente.mover(action))
 
         elif action == "limpar":
             linha = agente.posicao[0]
