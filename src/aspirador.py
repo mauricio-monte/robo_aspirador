@@ -55,8 +55,9 @@ class Aspirador:
             movimento = self.zigue_zague()
             self.desviando = False
 
-            if self.checar_colisao_obstaculos(movimento):          
-                destino = self.calcula_destino(movimento, "")
+            if self.checar_colisao_obstaculos(movimento):
+                tipo_desvio = self.calcula_tipo_desvio(movimento)
+                destino = self.calcula_destino(movimento, tipo_desvio)          
                 print("posicao_destino (l, c):", destino)
                 self.rota_desvio = self.bfs(self.posicao, destino)
                 movimento = self.desviar()
@@ -65,6 +66,42 @@ class Aspirador:
             movimento = self.desviar()
 
         return movimento
+
+    def calcula_posicao_obstaculo(self, movimento):
+        linha = self.posicao[0]
+        coluna = self.posicao[1]
+        posicao_obstaculo = []
+
+        if movimento == "cima":
+            posicao_obstaculo = cima(linha, coluna)
+        elif movimento == "baixo":
+            posicao_obstaculo = baixo(linha, coluna)
+        elif movimento == "esquerda":
+            posicao_obstaculo = esquerda(linha, coluna)
+        elif movimento == "direita":
+            posicao_obstaculo = direita(linha, coluna)
+        
+        return posicao_obstaculo
+
+    def calcula_tipo_desvio(self, movimento):
+        """Calcula se o obstáculo está no início, meio ou final de uma linha/coluna"""
+        posicao_obstaculo = self.calcula_posicao_obstaculo(movimento)
+        
+        linha_obstaculo = posicao_obstaculo[0]
+        coluna_obstaculo = posicao_obstaculo[1]
+        obstaculo_esta_no_limite_horizontal = coluna_obstaculo in {0, len(self.piso[0]) - 1}
+        obstaculo_limite_vertical = linha_obstaculo in {0, len(self.piso[0])}
+
+        if movimento in ["baixo", "cima"] and obstaculo_esta_no_limite_horizontal:
+            return "inicio"
+        elif movimento in {"esquerda", "direita"} and obstaculo_esta_no_limite_horizontal:
+            return "fim"
+        elif movimento in {"esquerda", "direita"} and not obstaculo_esta_no_limite_horizontal:
+            return "meio"
+        elif movimento in ["baixo", "cima"] and not obstaculo_limite_vertical:
+            return "tá descendo ou subindo"
+        elif movimento in ["baixo", "cima"] and obstaculo_limite_vertical:
+            return "tá no limite em cima ou embaixo"
             
     def calcula_destino(self, movimento, tipo_desvio):
         """Retorna qual posição final de uma rota de desvio"""
