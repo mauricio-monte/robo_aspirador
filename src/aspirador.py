@@ -24,99 +24,99 @@ class Aspirador:
         self.posicao_carregador = []
         self.possiveis_hotspots = []
 
-    def program(self, estado_piso):
+    def atualiza_modelo_interno(self, percepcao):
+        """Atualiza o modelo interno do ambiente que o agente possui"""
         linha = self.posicao[0]
         coluna = self.posicao[1]
 
-        # Atualiza o modelo interno
-        if estado_piso["cima"] == OBSTACULO:
-            self.piso[linha - 1][coluna] = estado_piso["cima"]
-        if estado_piso["direita"] == OBSTACULO:
-            self.piso[linha][coluna + 1] = estado_piso["direita"]
-        if estado_piso["baixo"] == OBSTACULO:
-            self.piso[linha + 1][coluna] = estado_piso["baixo"] 
-        if estado_piso["esquerda"] == OBSTACULO:
-            self.piso[linha][coluna - 1] = estado_piso["esquerda"]
-        if estado_piso["atual"] in [0, 1, 2]:
-            self.piso[linha][coluna] = estado_piso["atual"]
+        if percepcao["cima"] == OBSTACULO:
+            self.piso[linha - 1][coluna] = percepcao["cima"]
+        if percepcao["direita"] == OBSTACULO:
+            self.piso[linha][coluna + 1] = percepcao["direita"]
+        if percepcao["baixo"] == OBSTACULO:
+            self.piso[linha + 1][coluna] = percepcao["baixo"] 
+        if percepcao["esquerda"] == OBSTACULO:
+            self.piso[linha][coluna - 1] = percepcao["esquerda"]
+        if percepcao["atual"] in {PISO_LIMPO, PISO_SUJO, OBSTACULO}:
+            self.piso[linha][coluna] = percepcao["atual"]
+    
+    def program(self, estado_piso):
+        """Retorna a próxima ação do agente com nas suas percepções
+        e no seu estado atual"""
+        self.atualiza_modelo_interno(estado_piso)
 
-        # Retorna ação
         if estado_piso["atual"] == PISO_SUJO:
             return "limpar"
         else:
-            atingiu_limite_cima = (linha <= 0) or (self.piso[linha - 1][coluna] == '1')
-            atingiu_limite_baixo = (linha == len(self.piso) - 1) or (self.piso[linha + 1][coluna] == '1')
-            atingiu_limite_esquerda = (coluna <= 0) or (self.piso[linha][coluna - 1] == '1')
-            atingiu_limite_direita = (coluna == len(self.piso[0]) - 1) or (self.piso[linha][coluna + 1] == '1')
-           
-            # Primeiro movimento da simulação
-            if self.ultima_movimentacao_executada == "":
-                if not atingiu_limite_direita:
-                    return "direita"
-                if not atingiu_limite_esquerda:
-                    return "esquerda"
-                if not atingiu_limite_baixo:
-                    return "baixo"
-                if not atingiu_limite_cima:
-                    return "cima"
-
-            # Zigue zague
-            movimento = "direita"
-            if self.ultima_movimentacao_executada == "direita":
-                if atingiu_limite_direita:
-                    movimento = self.direcao
-                else:
-                    movimento = "direita"
-
-            elif self.ultima_movimentacao_executada == "esquerda":
-                if atingiu_limite_esquerda:
-                    movimento = self.direcao
-                else:
-                    movimento = "esquerda"
-
-            elif self.ultima_movimentacao_executada == self.direcao:
-                if not atingiu_limite_direita:
-                    movimento = "direita"
-                elif not atingiu_limite_esquerda:
-                    movimento = "esquerda"
-                elif not atingiu_limite_cima:
-                    movimento = "cima"
-                elif not atingiu_limite_baixo:
-                    movimento = "baixo"
-
-            if movimento == "baixo" and atingiu_limite_baixo:
-                self.direcao = "cima"
-                if self.ultima_movimentacao_executada == "esquerda":
-                    movimento = "direita"
-                elif self.ultima_movimentacao_executada == "direita":
-                    movimento = "esquerda"
-
-            if movimento == "cima" and atingiu_limite_cima:
-                self.direcao = "baixo"
-                if self.ultima_movimentacao_executada == "esquerda":
-                    movimento = "direita"
-                elif self.ultima_movimentacao_executada == "direita":
-                    movimento = "esquerda"
-
-            # print({
-            #     "direcao": self.direcao,
-            #     "ultima mov": self.ultima_movimentacao_executada,
-            #     "lim direita": atingiu_limite_direita,
-            #     "lim esquerda": atingiu_limite_esquerda,
-            #     "lim baixo": atingiu_limite_baixo,
-            #     "lim cima": atingiu_limite_cima,
-            #     "coluna": coluna,
-            #     "linha": linha,
-            #     "movimento": movimento
-            # })
+            movimento = self.zigue_zague()
             return movimento
+    
 
+    def zigue_zague(self):
+        """Retorna o próximo movimento que o aspirador deve fazer para
+        executar um movimento de zigue zague"""
+        linha = self.posicao[0]
+        coluna = self.posicao[1]
+        
+        atingiu_limite_cima = (linha <= 0) or (self.piso[linha - 1][coluna] == '1')
+        atingiu_limite_baixo = (linha == len(self.piso) - 1) or (self.piso[linha + 1][coluna] == '1')
+        atingiu_limite_esquerda = (coluna <= 0) or (self.piso[linha][coluna - 1] == '1')
+        atingiu_limite_direita = (coluna == len(self.piso[0]) - 1) or (self.piso[linha][coluna + 1] == '1')
+        
+        # Primeiro movimento da simulação
+        if self.ultima_movimentacao_executada == "":
+            if not atingiu_limite_direita:
+                return "direita"
+            if not atingiu_limite_esquerda:
+                return "esquerda"
+            if not atingiu_limite_baixo:
+                return "baixo"
+            if not atingiu_limite_cima:
+                return "cima"
 
+        # Zigue zague
+        movimento = "direita"
+        if self.ultima_movimentacao_executada == "direita":
+            if atingiu_limite_direita:
+                movimento = self.direcao
+            else:
+                movimento = "direita"
+
+        elif self.ultima_movimentacao_executada == "esquerda":
+            if atingiu_limite_esquerda:
+                movimento = self.direcao
+            else:
+                movimento = "esquerda"
+
+        elif self.ultima_movimentacao_executada == self.direcao:
+            if not atingiu_limite_direita:
+                movimento = "direita"
+            elif not atingiu_limite_esquerda:
+                movimento = "esquerda"
+            elif not atingiu_limite_cima:
+                movimento = "cima"
+            elif not atingiu_limite_baixo:
+                movimento = "baixo"
+
+        if movimento == "baixo" and atingiu_limite_baixo:
+            self.direcao = "cima"
+            if self.ultima_movimentacao_executada == "esquerda":
+                movimento = "direita"
+            elif self.ultima_movimentacao_executada == "direita":
+                movimento = "esquerda"
+
+        if movimento == "cima" and atingiu_limite_cima:
+            self.direcao = "baixo"
+            if self.ultima_movimentacao_executada == "esquerda":
+                movimento = "direita"
+            elif self.ultima_movimentacao_executada == "direita":
+                movimento = "esquerda"
+
+        return movimento
+        
     def mover(self, acao):
         if self.bateria <= 0:
             return
-        linha = self.posicao[0]
-        coluna = self.posicao[1]
         
         if acao == "direita":
             self.posicao[1] += 1
@@ -130,18 +130,10 @@ class Aspirador:
         elif acao == "baixo": 
             self.posicao[0] += 1
 
-        self.ultima_movimentacao_executada = acao
+        if not self.desviando:
+            self.ultima_movimentacao_executada = acao
         self.bateria -= 1
         return self.posicao, acao
-
-    def mover_para_cima(self):
-        pass
-    def mover_para_baixo(self):
-        pass
-    def mover_para_esquerda(self):
-        pass
-    def mover_para_direita(self):
-        pass
 
     def limpar(self, estado_do_piso):
         if self.bateria > 5:
