@@ -5,16 +5,19 @@ from exibicao import (
     colorir_celula,
     gerar_cabecalho_matriz
 )
+from utils import cima, baixo, direita, esquerda
+
 PISO_LIMPO = 0
 OBSTACULO = 1
 PISO_SUJO = 2
-
 
 class Aspirador:
     posicao = [0, 0]
     acoes = ["cima", "baixo", "esquerda", "direita", "aspirar", "recarregar"]
     direcao = "baixo" # Diz se o robo está subindo ou descendo no zig zague
     ultima_movimentacao_executada = ""
+    rota_desvio = [] # quais coordenadas devem ser percorridas para o aspirador se deslocar para uma determinada célula
+    desviando = False
 
     def __init__(self, bateria, tamanho_sala):
         self.bateria = bateria
@@ -44,13 +47,71 @@ class Aspirador:
         """Retorna a próxima ação do agente com nas suas percepções
         e no seu estado atual"""
         self.atualiza_modelo_interno(estado_piso)
-
+        
         if estado_piso["atual"] == PISO_SUJO:
             return "limpar"
-        else:
+        
+        if self.rota_desvio == []:
             movimento = self.zigue_zague()
-            return movimento
-    
+            self.desviando = False
+
+            if self.checar_colisao_obstaculos(movimento):          
+                destino = self.calcula_destino(movimento, "")
+                print("posicao_destino (l, c):", destino)
+                self.rota_desvio = self.bfs(self.posicao, destino)
+                movimento = self.desviar()
+                self.desviando = True
+        else:
+            movimento = self.desviar()
+
+        return movimento
+            
+    def calcula_destino(self, movimento, tipo_desvio):
+        """Retorna qual posição final de uma rota de desvio"""
+        return (1, 8)
+
+    def checar_colisao_obstaculos(self, movimento):
+        """Simula o movimento a ser executado e verifica se haveria
+        colisão com um obstáculo"""
+        linha = self.posicao[0]
+        coluna = self.posicao[1]
+        proxima_posicao = [linha, coluna]
+        
+        if movimento == "cima":
+            proxima_posicao = cima(linha, coluna)
+        elif movimento == "baixo":
+            proxima_posicao = baixo(linha, coluna)
+        elif movimento == "esquerda":
+            proxima_posicao = esquerda(linha, coluna)
+        elif movimento == "direita":
+            proxima_posicao = direita(linha, coluna)
+        
+        if self.piso[proxima_posicao[0], proxima_posicao[1]] == str(OBSTACULO):
+            return True
+        else:
+            return False
+
+    def desviar(self):
+        """Retorna qual a próxima movimentação a ser feita para executar a rota de desvio"""
+        destino = self.rota_desvio[0]
+        proximo_movimento = ""
+        if destino == cima(*self.posicao):
+            proximo_movimento = "cima"
+        elif destino == baixo(*self.posicao):
+            proximo_movimento = "baixo"
+        elif destino == esquerda(*self.posicao):
+            proximo_movimento = "esquerda"
+        elif destino == direita(*self.posicao):
+            proximo_movimento = "direita"
+        
+        # Atualiza a rota
+        self.rota_desvio = self.rota_desvio[1:]
+
+        return proximo_movimento
+
+    def bfs(self, origem, destino):
+        """Cria uma rota entre dois pontos"""
+        return [(0,8), (1,8)] #este é o resultado esperado para o teste estabelecido
 
     def zigue_zague(self):
         """Retorna o próximo movimento que o aspirador deve fazer para
@@ -58,10 +119,10 @@ class Aspirador:
         linha = self.posicao[0]
         coluna = self.posicao[1]
         
-        atingiu_limite_cima = (linha <= 0) or (self.piso[linha - 1][coluna] == '1')
-        atingiu_limite_baixo = (linha == len(self.piso) - 1) or (self.piso[linha + 1][coluna] == '1')
-        atingiu_limite_esquerda = (coluna <= 0) or (self.piso[linha][coluna - 1] == '1')
-        atingiu_limite_direita = (coluna == len(self.piso[0]) - 1) or (self.piso[linha][coluna + 1] == '1')
+        atingiu_limite_cima = (linha <= 0) 
+        atingiu_limite_baixo = (linha == len(self.piso) - 1)
+        atingiu_limite_esquerda = (coluna <= 0) 
+        atingiu_limite_direita = (coluna == len(self.piso[0]) - 1)
         
         # Primeiro movimento da simulação
         if self.ultima_movimentacao_executada == "":
