@@ -105,15 +105,34 @@ class Aspirador:
             
     def calcula_destino(self, movimento, tipo_desvio):
         """Retorna qual posição final de uma rota de desvio"""
-        return (1, 8)
+        destino = []
 
-    def checar_colisao_obstaculos(self, movimento):
-        """Simula o movimento a ser executado e verifica se haveria
-        colisão com um obstáculo"""
-        linha = self.posicao[0]
-        coluna = self.posicao[1]
-        proxima_posicao = [linha, coluna]
-        
+        if tipo_desvio == "inicio":
+            if self.ultima_movimentacao_executada == "direita":
+                direcao = "esquerda"
+            else:
+                direcao = "direita"
+
+            destino = self.simulacao_movimento(self.posicao[0], self.posicao[1],
+                                               movimento)
+            destino = self.simulacao_movimento(destino[0], destino[1],
+                                               direcao)
+        elif tipo_desvio == "meio":
+            destino = self.simulacao_movimento(destino[0], destino[1],
+                                               movimento)
+            destino = self.simulacao_movimento(destino[0], destino[1],
+                                               movimento)
+        elif tipo_desvio == "fim":
+            destino = self.simulacao_movimento(self.posicao[0], self.posicao[1],
+                                               movimento)
+            destino = self.simulacao_movimento(destino[0], destino[1],
+                                               self.direcao)
+        return destino
+
+
+    def simulacao_movimento(self, linha, coluna, movimento):
+        proxima_posicao = []
+
         if movimento == "cima":
             proxima_posicao = cima(linha, coluna)
         elif movimento == "baixo":
@@ -122,6 +141,15 @@ class Aspirador:
             proxima_posicao = esquerda(linha, coluna)
         elif movimento == "direita":
             proxima_posicao = direita(linha, coluna)
+        
+        return proxima_posicao
+
+
+    def checar_colisao_obstaculos(self, movimento):
+        """Simula o movimento a ser executado e verifica se haveria
+        colisão com um obstáculo"""
+        proxima_posicao = self.simulacao_movimento(self.posicao[0], self.posicao[1],
+                                                   movimento)
         
         if self.piso[proxima_posicao[0], proxima_posicao[1]] == str(OBSTACULO):
             return True
