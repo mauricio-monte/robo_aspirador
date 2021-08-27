@@ -118,7 +118,7 @@ class Aspirador:
             destino = self.simulacao_movimento(destino[0], destino[1],
                                                direcao)
         elif tipo_desvio == "meio":
-            destino = self.simulacao_movimento(destino[0], destino[1],
+            destino = self.simulacao_movimento(self.posicao[0], self.posicao[1],
                                                movimento)
             destino = self.simulacao_movimento(destino[0], destino[1],
                                                movimento)
