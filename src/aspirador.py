@@ -26,6 +26,8 @@ class Aspirador:
         self.contadores = np.zeros(list(tamanho_sala), int)
         self.posicao_carregador = []
         self.possiveis_hotspots = []
+        Rows = tamanho_sala[0]
+        Coluns = tamanho_sala[1]
 
     def atualiza_modelo_interno(self, percepcao):
         """Atualiza o modelo interno do ambiente que o agente possui"""
@@ -180,8 +182,68 @@ class Aspirador:
         return proximo_movimento
 
     def bfs(self, origem, destino):
+        mosel_count = self.solve(origem, destino)
+
+        #Falta agora passar a receber os passos do caminho, e não seu tamanho, após isso = GG
+
         """Cria uma rota entre dois pontos"""
         return [(0,8), (1,8)] #este é o resultado esperado para o teste estabelecido
+
+    def solve(self, origem, destino):
+        visited = []
+        reached_end = False
+
+        move_count = 0
+        nodes_left_in_layer = 1
+        nodes_in_next_layer = 0
+
+        m = self.piso
+        visited = self.piso
+        visited = np.zeros(list(self.piso), str)
+        sr = origem[0]
+        sc = origem[1]
+        rq = []
+        cq = []
+
+        dr = [-1, 1, 0, 0]
+        dc = [0, 0, 1, -1]
+
+        rq.append(sr)
+        cq.append(sc)
+        visited[sr][sc] = 1
+        while (len(rq) > 0):
+            r = rq.pop(0)
+            c = rq.pop(0)
+            if ([r, c] == list(destino)):
+                reached_end = True
+                break
+
+            #explore_neighbours FUNCTION
+            for i in range (3):
+                rr = r + dr[i]
+                cc = c + dc[i]
+
+                if (rr < 0 or cc < 0): continue
+                if (rr >= self.Rows or cc >= self.Coluns): continue
+
+                if (visited[rr][cc] == 1): continue
+                if (m[rr][cc] == 0 or m[rr][cc] == 2): continue
+
+                rq.append(rr)
+                cq.append(cc)
+                visited[rr][cc] = 1
+                nodes_in_next_layer += 1
+            #end
+
+            nodes_left_in_layer -= 1
+            if (nodes_left_in_layer == 0):
+                nodes_left_in_layer = nodes_in_next_layer
+                nodes_in_next_layer = 0
+                move_count += 1
+        if (reached_end):
+            return move_count
+        else:
+            return -1
 
     def zigue_zague(self):
         """Retorna o próximo movimento que o aspirador deve fazer para
