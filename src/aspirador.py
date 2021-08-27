@@ -117,6 +117,7 @@ class Aspirador:
                                                movimento)
             destino = self.simulacao_movimento(destino[0], destino[1],
                                                direcao)
+            self.ultima_movimentacao_executada = direcao
         elif tipo_desvio == "meio":
             destino = self.simulacao_movimento(self.posicao[0], self.posicao[1],
                                                movimento)
@@ -127,6 +128,10 @@ class Aspirador:
                                                movimento)
             destino = self.simulacao_movimento(destino[0], destino[1],
                                                self.direcao)
+            if self.ultima_movimentacao_executada == "direita":
+                self.ultima_movimentacao_executada = "esquerda"
+            else:
+                self.ultima_movimentacao_executada = "direita"                                   
         return destino
 
 
