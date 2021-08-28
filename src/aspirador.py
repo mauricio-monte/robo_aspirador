@@ -26,8 +26,9 @@ class Aspirador:
         self.contadores = np.zeros(list(tamanho_sala), int)
         self.posicao_carregador = []
         self.possiveis_hotspots = []
-        Rows = tamanho_sala[0]
-        Coluns = tamanho_sala[1]
+        self.tamanho_sala = tamanho_sala
+        self.Rows = tamanho_sala[0]
+        self.Coluns = tamanho_sala[1]
 
     def atualiza_modelo_interno(self, percepcao):
         """Atualiza o modelo interno do ambiente que o agente possui"""
@@ -60,7 +61,6 @@ class Aspirador:
             if self.checar_colisao_obstaculos(movimento):
                 tipo_desvio = self.calcula_tipo_desvio(movimento)
                 destino = self.calcula_destino(movimento, tipo_desvio)          
-                print("posicao_destino (l, c):", destino)
                 self.rota_desvio = self.bfs(self.posicao, destino)
                 movimento = self.desviar()
                 self.desviando = True
@@ -176,20 +176,17 @@ class Aspirador:
         elif destino == direita(*self.posicao):
             proximo_movimento = "direita"
         
-        # Atualiza a rota
         self.rota_desvio = self.rota_desvio[1:]
 
         return proximo_movimento
 
     def bfs(self, origem, destino):
         mosel_count = self.solve(origem, destino)
-
-        #Falta agora passar a receber os passos do caminho, e não seu tamanho, após isso = GG
-
-        """Cria uma rota entre dois pontos"""
-        return [(0,8), (1,8)] #este é o resultado esperado para o teste estabelecido
+        mosel_count.pop(0)
+        return  mosel_count
 
     def solve(self, origem, destino):
+        solucao = []
         visited = []
         reached_end = False
 
@@ -198,8 +195,7 @@ class Aspirador:
         nodes_in_next_layer = 0
 
         m = self.piso
-        visited = self.piso
-        visited = np.zeros(list(self.piso), str)
+        visited = np.zeros(list(self.tamanho_sala), int)
         sr = origem[0]
         sc = origem[1]
         rq = []
@@ -211,24 +207,23 @@ class Aspirador:
         rq.append(sr)
         cq.append(sc)
         visited[sr][sc] = 1
+       
         while (len(rq) > 0):
             r = rq.pop(0)
-            c = rq.pop(0)
+            c = cq.pop(0)
             if ([r, c] == list(destino)):
-                reached_end = True
+                solucao.append((r, c))
+                print("ENCONTROU")
                 break
 
             #explore_neighbours FUNCTION
-            for i in range (3):
+            for i in range (4):
                 rr = r + dr[i]
                 cc = c + dc[i]
-
                 if (rr < 0 or cc < 0): continue
                 if (rr >= self.Rows or cc >= self.Coluns): continue
-
                 if (visited[rr][cc] == 1): continue
-                if (m[rr][cc] == 0 or m[rr][cc] == 2): continue
-
+                if (m[rr][cc] == '1'): continue
                 rq.append(rr)
                 cq.append(cc)
                 visited[rr][cc] = 1
@@ -239,11 +234,8 @@ class Aspirador:
             if (nodes_left_in_layer == 0):
                 nodes_left_in_layer = nodes_in_next_layer
                 nodes_in_next_layer = 0
-                move_count += 1
-        if (reached_end):
-            return move_count
-        else:
-            return -1
+                solucao.append((r, c))
+        return solucao
 
     def zigue_zague(self):
         """Retorna o próximo movimento que o aspirador deve fazer para
