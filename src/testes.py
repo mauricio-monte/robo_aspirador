@@ -26,7 +26,7 @@ def teste_nosso():
 
     sala = Sala(tamanho_sala, array_de_obstaculos, hot_spots_sujeira, aspirador, (0, 0), (4, 5))
 
-    sala.run(400)
+    sala.run(500)
 
 def teste_obstaculo_inicio_linha_horizontal():
     tamanho_sala = (10, 10)
@@ -38,7 +38,7 @@ def teste_obstaculo_inicio_linha_horizontal():
 
     sala = Sala(tamanho_sala, array_de_obstaculos, hot_spots_sujeira, aspirador, (0, 0), (4, 5))
 
-    sala.run(400)
+    sala.run(500)
 
 def teste_obstaculo_meio_linha_horizontal():
     tamanho_sala = (10, 10)
@@ -50,7 +50,7 @@ def teste_obstaculo_meio_linha_horizontal():
 
     sala = Sala(tamanho_sala, array_de_obstaculos, hot_spots_sujeira, aspirador, (0, 0), (4, 5))
 
-    sala.run(400)
+    sala.run(500)
 
 def teste_obstaculo_final_linha_horizontal():
     tamanho_sala = (10, 10)
@@ -62,4 +62,4 @@ def teste_obstaculo_final_linha_horizontal():
 
     sala = Sala(tamanho_sala, array_de_obstaculos, hot_spots_sujeira, aspirador, (0, 0), (4, 5))
 
-    sala.run(400)
+    sala.run(500)

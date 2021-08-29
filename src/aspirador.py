@@ -1,4 +1,5 @@
 import numpy as np
+from tree import TreeNode
 
 from exibicao import (
     concatenar_representacoes,
@@ -115,31 +116,26 @@ class Aspirador:
             else:
                 direcao = "direita"
 
-            destino = self.simulacao_movimento(self.posicao[0], self.posicao[1],
-                                               movimento)
-            destino = self.simulacao_movimento(destino[0], destino[1],
-                                               direcao)
+            destino = self.simulacao_movimento(self.posicao[0], self.posicao[1], movimento)
+            destino = self.simulacao_movimento(destino[0], destino[1], direcao)
             self.ultima_movimentacao_executada = direcao
+
         elif tipo_desvio == "meio":
-            destino = self.simulacao_movimento(self.posicao[0], self.posicao[1],
-                                               movimento)
-            destino = self.simulacao_movimento(destino[0], destino[1],
-                                               movimento)
+            destino = self.simulacao_movimento(self.posicao[0], self.posicao[1], movimento)
+            destino = self.simulacao_movimento(destino[0], destino[1], movimento)
+
         elif tipo_desvio == "fim":
-            destino = self.simulacao_movimento(self.posicao[0], self.posicao[1],
-                                               movimento)
-            destino = self.simulacao_movimento(destino[0], destino[1],
-                                               self.direcao)
+            destino = self.simulacao_movimento(self.posicao[0], self.posicao[1], movimento)
+            destino = self.simulacao_movimento(destino[0], destino[1], self.direcao)
+
             if self.ultima_movimentacao_executada == "direita":
                 self.ultima_movimentacao_executada = "esquerda"
             else:
                 self.ultima_movimentacao_executada = "direita"                                   
         return destino
 
-
     def simulacao_movimento(self, linha, coluna, movimento):
         proxima_posicao = []
-
         if movimento == "cima":
             proxima_posicao = cima(linha, coluna)
         elif movimento == "baixo":
@@ -151,13 +147,9 @@ class Aspirador:
         
         return proxima_posicao
 
-
     def checar_colisao_obstaculos(self, movimento):
-        """Simula o movimento a ser executado e verifica se haveria
-        colisão com um obstáculo"""
-        proxima_posicao = self.simulacao_movimento(self.posicao[0], self.posicao[1],
-                                                   movimento)
-        
+        """Simula o movimento a ser executado e verifica se haveria colisão com um obstáculo"""
+        proxima_posicao = self.simulacao_movimento(self.posicao[0], self.posicao[1],movimento)
         if self.piso[proxima_posicao[0], proxima_posicao[1]] == str(OBSTACULO):
             return True
         else:
@@ -181,19 +173,16 @@ class Aspirador:
         return proximo_movimento
 
     def bfs(self, origem, destino):
-        mosel_count = self.solve(origem, destino)
-        mosel_count.pop(0)
-        return  mosel_count
+        caminho = self.solve(origem, destino)
+        caminho.pop(0)
+        return caminho
 
     def solve(self, origem, destino):
         solucao = []
         visited = []
         reached_end = False
-
-        move_count = 0
-        nodes_left_in_layer = 1
-        nodes_in_next_layer = 0
-
+        # nodes_left_in_layer = 1
+        # nodes_in_next_layer = 0
         m = self.piso
         visited = np.zeros(list(self.tamanho_sala), int)
         sr = origem[0]
@@ -207,16 +196,18 @@ class Aspirador:
         rq.append(sr)
         cq.append(sc)
         visited[sr][sc] = 1
-       
+        array1 = []
+        array2 = []
+
         while (len(rq) > 0):
             r = rq.pop(0)
             c = cq.pop(0)
             if ([r, c] == list(destino)):
                 solucao.append((r, c))
-                print("ENCONTROU")
+                reached_end = True
                 break
-
             #explore_neighbours FUNCTION
+            array_aux = []
             for i in range (4):
                 rr = r + dr[i]
                 cc = c + dc[i]
@@ -224,18 +215,36 @@ class Aspirador:
                 if (rr >= self.Rows or cc >= self.Coluns): continue
                 if (visited[rr][cc] == 1): continue
                 if (m[rr][cc] == '1'): continue
+                array_aux.append((rr,cc))
                 rq.append(rr)
                 cq.append(cc)
                 visited[rr][cc] = 1
-                nodes_in_next_layer += 1
-            #end
+                # nodes_in_next_layer += 1
+            array1.append((r,c))
+            array2.append(array_aux)
+            # nodes_left_in_layer -= 1
+            # if (nodes_left_in_layer == 0):
+            #     nodes_left_in_layer = nodes_in_next_layer
+            #     nodes_in_next_layer = 0
+            #     solucao.append((rr, cc))
 
-            nodes_left_in_layer -= 1
-            if (nodes_left_in_layer == 0):
-                nodes_left_in_layer = nodes_in_next_layer
-                nodes_in_next_layer = 0
-                solucao.append((r, c))
-        return solucao
+        tree = self.adiciona(array1, array2)
+        tree.search(tree, destino)
+        caminhoCorreto = tree.ultima_busca.caminho()
+
+        caminhoCorreto.insert(0, destino)
+        caminhoCorreto.reverse()
+        if(reached_end):
+            return caminhoCorreto
+        else:
+            return []
+
+    def adiciona(self, lista1, lista2):
+        root = TreeNode(lista1[0])
+        for i in range(len(lista1)):
+            for j in range(len(lista2[i])):
+                root.add(lista2[i][j], lista1[i])
+        return root
 
     def zigue_zague(self):
         """Retorna o próximo movimento que o aspirador deve fazer para
