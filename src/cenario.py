@@ -130,7 +130,7 @@ class Sala:
         print(gerar_titulo(f"Step {step}", (len(self.piso[0]) + 2) * 3))
         print(f'Agente: (x={self.posicao_agente[1]}, y={self.posicao_agente[0]}) Bateria: {self.agente.bateria}')
         print(concatenar_representacoes(representacao_sala, representacao_agente))
-        time.sleep(1)
+        time.sleep(0.1)
 
     def gerar_representacao_sala(self, percepcao_agente):
         representacao = gerar_cabecalho_matriz("Sala", len(self.piso[0]))

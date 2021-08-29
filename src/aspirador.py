@@ -1,4 +1,5 @@
 import numpy as np
+from tree import TreeNode
 
 from exibicao import (
     concatenar_representacoes,
@@ -181,16 +182,18 @@ class Aspirador:
         return proximo_movimento
 
     def bfs(self, origem, destino):
-        mosel_count = self.solve(origem, destino)
-        mosel_count.pop(0)
-        return  mosel_count
+        print("origem", origem)
+        print("destino", destino)
+        caminho = self.solve(origem, destino)
+        caminho.pop(0)
+        print("caminho", caminho)
+        return  caminho
 
     def solve(self, origem, destino):
         solucao = []
         visited = []
         reached_end = False
 
-        move_count = 0
         nodes_left_in_layer = 1
         nodes_in_next_layer = 0
 
@@ -206,17 +209,26 @@ class Aspirador:
 
         rq.append(sr)
         cq.append(sc)
+        
         visited[sr][sc] = 1
-       
+        string = str((sr,sc))
+
+        array1 = []
+        array2 = []
+
+        # arvore.append(root)
+        # CRIAR A ARVORE COM RAIZ SR SC
         while (len(rq) > 0):
             r = rq.pop(0)
             c = cq.pop(0)
+            # print("r:", r,"c:", c)
             if ([r, c] == list(destino)):
                 solucao.append((r, c))
+                reached_end = True
                 print("ENCONTROU")
                 break
-
             #explore_neighbours FUNCTION
+            array_aux = []
             for i in range (4):
                 rr = r + dr[i]
                 cc = c + dc[i]
@@ -224,18 +236,73 @@ class Aspirador:
                 if (rr >= self.Rows or cc >= self.Coluns): continue
                 if (visited[rr][cc] == 1): continue
                 if (m[rr][cc] == '1'): continue
+                array_aux.append((rr,cc))
                 rq.append(rr)
                 cq.append(cc)
                 visited[rr][cc] = 1
                 nodes_in_next_layer += 1
-            #end
-
+                # INSERIR NÓ (RR, CC) NO NÒ (R, C)
+                # print("rr:", rr,"cc:", cc)
+            array1.append((r,c))
+            array2.append(array_aux)
             nodes_left_in_layer -= 1
             if (nodes_left_in_layer == 0):
                 nodes_left_in_layer = nodes_in_next_layer
                 nodes_in_next_layer = 0
-                solucao.append((r, c))
-        return solucao
+                solucao.append((rr, cc))
+
+        # for i in range(len(arvore)):
+        #     print('arvore[i]:', arvore[i].print_tree())
+        
+        # root.print_tree()
+        # print('array1:', array1)
+        # print('array2:', array2)
+
+        
+        # for i in range(len(array1)):
+        #     if i==0:
+        #         root = TreeNode(array1[0])
+        #         for j in range(len(array2[0])):
+        #             no_filho = TreeNode(array2[0][j])
+        #             root.add_child(no_filho)
+        #     no = TreeNode(array1[i])
+        #     for j in range(len(array2[i])):
+        #         no_filho = TreeNode(array2[i][j])
+        #         no.add_child(no_filho)
+
+        root = self.adiciona(array1, array2)
+        print(root.print_tree())
+        print('#RESPOSTA', root.search(destino))
+        # root = TreeNode(array1[0])
+        # a = self.recu(root, array1, array2, 0)
+        # a.print_tree()
+        print(visited)
+        if(reached_end):
+            return solucao
+        else:
+            return []
+
+    # def recu(self, x, lista1, lista2, num):
+    #     if(num==len(lista1)-1):
+    #         print('--------root--------')
+    #         TreeNode(x).print_tree()
+    #         print('--------root--------')
+    #         return TreeNode(x)
+    #     else:
+    #         root = TreeNode(x)
+    #         for j in range(len(lista2[num])):
+    #             no_filho = self.recu(lista2[num][j], lista1, lista2, num+1)
+                
+    #             if(no_filho is not None):
+    #                 no_filho.print_tree()
+    #                 root.add_child(no_filho)
+        
+    def adiciona(self, lista1, lista2):
+        root = TreeNode(lista1[0])
+        for i in range(len(lista1)):
+            for j in range(len(lista2[i])):
+                root.add(lista2[i][j], lista1[i])
+        return root
 
     def zigue_zague(self):
         """Retorna o próximo movimento que o aspirador deve fazer para
