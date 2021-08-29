@@ -3,7 +3,8 @@ class TreeNode:
         self.data = data
         self.children = []
         self.parent = None
-
+        self.ultima_busca = None
+        
     def get_level(self):
         level = 0
         p = self.parent
@@ -29,25 +30,24 @@ class TreeNode:
         return self.data
 
     def add(self, child, pai):
-        # if self.parent:
-        #     if self.parent.data == str(pai):
-        #         print(1)
-        # else:
-            if self.data == pai:
-                node = TreeNode(child)
-                self.add_child(node)
-            else:
-                for children in self.children:
-                    children.add(child, pai)
-                    # self.add(child, children)
+        if self.data == pai:
+            node = TreeNode(child)
+            self.add_child(node)
+        else:
+            for children in self.children:
+                children.add(child, pai)
     
-    def search(self, child):
+    def search(self, root, child):
         print('#CHILD:', child, '#Data:', self.data, self.data == child)
         if self.data == child:
-            return self.caminho()
+            return child
         
         for children in self.children:
-            children.search(child)
+            if children.data == child:
+                root.ultima_busca = children
+                return children
+            else:
+                children.search(root, child)
 
     def caminho(self):
         lista = []
@@ -57,11 +57,3 @@ class TreeNode:
             p = p.parent
         print(lista)
         return lista
-
-        # if:
-        #     if self.children:
-        #         for child in self.children:
-        #             node = TreeNode(str(child))
-        #             child.add(node, pai)
-        #     else:
-        #         print("DADO NAO PODE SER ADD")
