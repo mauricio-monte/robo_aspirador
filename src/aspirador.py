@@ -268,11 +268,16 @@ class Aspirador:
             for col, cont_limpeza in enumerate(linha):
                 limpezas_celulas[(lin, col)] = cont_limpeza
     
-        celulas_ordenadas_por_limpezas = sorted(limpezas_celulas, key=limpezas_celulas.get, reverse=True)
-        maior_limpeza = celulas_ordenadas_por_limpezas[0]        
-        teste = filter(lambda x: x[1] >= (maior_limpeza - 2), celulas_ordenadas_por_limpezas)
 
-        return list(teste)
+        celulas_ordenadas = []
+        
+        for coord in sorted(limpezas_celulas, key=limpezas_celulas.get, reverse=True):
+            celulas_ordenadas.append((coord, limpezas_celulas[coord]))
+        
+        maior_limpeza = celulas_ordenadas[0][1]
+        hotspots = list(filter(lambda x: x[1] >= (maior_limpeza - 2), celulas_ordenadas))
+        hotspots = list(zip(*hotspots))
+        return list(hotspots[0])
 
     def gerar_status(self, coordenadas_percepcao):
         """Cria representação da posição do agente, modelo interno do ambiente e os contadores"""
