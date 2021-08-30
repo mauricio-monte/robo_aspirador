@@ -18,15 +18,15 @@ def teste_professor():
 
 
 def teste_nosso():
-    tamanho_sala = (10, 10)
-    bateria = 10000
-    array_de_obstaculos = [[1, 9]] # [[0, 1], [3, 0]]
-    hot_spots_sujeira = [[0, 2], [3, 3]]
-    aspirador = Aspirador(bateria, tamanho_sala)
-
-    sala = Sala(tamanho_sala, array_de_obstaculos, hot_spots_sujeira, aspirador, (0, 0), (4, 5))
-
-    sala.run(500)
+    M=10
+    N=10
+    meu_aspirador = Aspirador(100, M, N)
+    posicao_aspirador = (0,0)
+    posicao_base_carregador = (4,5)
+    posicao_obstaculos = [(5,5),(5,4),(5,3)]
+    posicao_hotspots = [(2,2),(3,3)]
+    ambiente  = Sala((M,N), posicao_obstaculos, posicao_hotspots, meu_aspirador, posicao_aspirador, posicao_base_carregador)
+    ambiente.run(400)
 
 def teste_obstaculo_inicio_linha_horizontal():
     tamanho_sala = (10, 10)
@@ -42,8 +42,20 @@ def teste_obstaculo_inicio_linha_horizontal():
 
 def teste_obstaculo_meio_linha_horizontal():
     tamanho_sala = (10, 10)
-    bateria = 10000
+    bateria = 100
     array_de_obstaculos = [[0, 5]]
+    rota_desvio = [(1, 4), (1, 5), (1, 6), (0, 6)] # Essa é a rota que se espera que seja retornada pela bfs
+    hot_spots_sujeira = [[0, 2], [3, 3]]
+    aspirador = Aspirador(bateria, tamanho_sala)
+
+    sala = Sala(tamanho_sala, array_de_obstaculos, hot_spots_sujeira, aspirador, (0, 0), (4, 5))
+
+    sala.run(500)
+
+def teste_obstaculo_meio2_linha_horizontal():
+    tamanho_sala = (10, 10)
+    bateria = 10000
+    array_de_obstaculos = [[1, 5]]
     rota_desvio = [(1, 4), (1, 5), (1, 6), (0, 6)] # Essa é a rota que se espera que seja retornada pela bfs
     hot_spots_sujeira = [[0, 2], [3, 3]]
     aspirador = Aspirador(bateria, tamanho_sala)
