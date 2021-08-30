@@ -20,6 +20,8 @@ class Aspirador:
     desviando = False
     descarregando = False
     capacidade_bateria = 0
+    limpezas_efetuadas = 0
+    modo_operacao = "exploração"
 
     def __init__(self, bateria, linhas, colunas):
         self.capacidade_bateria = bateria
@@ -29,7 +31,7 @@ class Aspirador:
         self.contadores = np.zeros((linhas, colunas), int)
         self.posicao_carregador = ()
         self.possiveis_hotspots = []
-        self.ultima_posicao = [0,0]
+        self.ultima_posicao = (0,0)
 
     def get_posicao(self):
         return (self.linha, self.coluna)
@@ -61,7 +63,12 @@ class Aspirador:
         """Retorna a próxima ação do agente com nas suas percepções
         e no seu estado atual"""
         self.atualiza_modelo_interno(percepcao)
-        
+        if self.limpezas_efetuadas >= 15 and self.modo_operacao == "exploração":
+            self.modo_operacao = "limpeza"
+            self.possiveis_hotspots = self.calcular_possiveis_hotspots()
+            print(self.possiveis_hotspots)
+            exit()
+
         if self.posicao_carregador == self.get_posicao() and self.get_bateria() <= 50:
             return "recarregar"
 
@@ -234,9 +241,11 @@ class Aspirador:
             if estado_do_piso == PISO_SUJO:
                 self.bateria -= 5
                 self.contadores[self.linha][self.coluna] += 1
+                self.limpezas_efetuadas += 1
                 return True
 
         return False
+        
 
     # realizar busca heurística usando a avaliação heurística, o modelo do ambiente e a percepção corrente.
     # considerar que ele deve retornar à base quando a bateria estiver crítica
@@ -251,6 +260,19 @@ class Aspirador:
             self.desviando = False
             return True
         return False
+
+    def calcular_possiveis_hotspots(self):
+        limpezas_celulas = {(lin, col): 0 for lin in range(10) for col in range(10)}
+
+        for lin, linha in enumerate(self.contadores):
+            for col, cont_limpeza in enumerate(linha):
+                limpezas_celulas[(lin, col)] = cont_limpeza
+    
+        celulas_ordenadas_por_limpezas = sorted(limpezas_celulas, key=limpezas_celulas.get, reverse=True)
+        maior_limpeza = celulas_ordenadas_por_limpezas[0]        
+        teste = filter(lambda x: x[1] >= (maior_limpeza - 2), celulas_ordenadas_por_limpezas)
+
+        return list(teste)
 
     def gerar_status(self, coordenadas_percepcao):
         """Cria representação da posição do agente, modelo interno do ambiente e os contadores"""
