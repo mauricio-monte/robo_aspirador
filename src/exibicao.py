@@ -1,4 +1,4 @@
-OBSTACULO = 1
+from constantes import (PISO_LIMPO, OBSTACULO, PISO_SUJO, NAO_EXPLORADO)
 
 # Funções de Formatação
 def gerar_titulo(titulo, colunas, decoracao="-"):
@@ -28,21 +28,44 @@ def colorir_celula(linha, coluna, valor_celula,
                    coordenadas_percepcao):
     cor = ""
 
-    if [linha, coluna] in hotspots:
+    if (linha, coluna) in hotspots:
         cor += Cores.bgRed
-    if [linha, coluna] == posicao_aspirador:
+    if (linha, coluna) == posicao_aspirador:
         cor += Cores.bgGreen
-    if [linha, coluna] == posicao_carregador:
+    if (linha, coluna) == posicao_carregador:
         cor += Cores.bgMagenta
-    if valor_celula in {OBSTACULO, str(OBSTACULO)}:
+    if valor_celula == OBSTACULO:
         cor += Formatacao.reversed
-    if valor_celula == "?":
+    if valor_celula == NAO_EXPLORADO:
         cor += Cores.fgCyan
-    if [linha, coluna] in coordenadas_percepcao:
+        return cor + " " + "?" + " " + Cores.reset
+
+    if (linha, coluna) in coordenadas_percepcao:
         cor += Cores.fgGreen
 
     return cor + " " + str(valor_celula) + " " + Cores.reset
 
+def colorir_celula_aspirador(linha, coluna, valor_celula,
+                   posicao_aspirador, posicao_carregador, hotspots,
+                   coordenadas_percepcao):
+    cor = ""
+
+    if (linha, coluna) in hotspots:
+        cor += Cores.bgRed
+    if (linha, coluna) == posicao_aspirador:
+        cor += Cores.bgGreen
+    if (linha, coluna) == posicao_carregador:
+        cor += Cores.bgMagenta
+    if valor_celula == OBSTACULO:
+        cor += Formatacao.reversed
+    if valor_celula == NAO_EXPLORADO:
+        cor += Cores.fgCyan
+        return cor + " " + "?" + " " + Cores.reset
+
+    if (linha, coluna) in coordenadas_percepcao:
+        cor += Cores.fgGreen
+
+    return cor + " " + str(valor_celula) + " " + Cores.reset
 
 # Constantes de Formatação
 class Cores:

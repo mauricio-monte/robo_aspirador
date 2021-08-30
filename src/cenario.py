@@ -1,5 +1,7 @@
 import time
 import numpy as np
+from random import random
+from constantes import OBSTACULO, PISO_SUJO
 
 from exibicao import (
     concatenar_representacoes,
@@ -10,22 +12,16 @@ from exibicao import (
 
 
 class Sala:
-    vazio = 0
-    obstaculo = 1
-    sujeira = 2
-    direcao_do_aspirador = "direita"
-    probabilidade_de_sujeira = 1
-    probabilidade_de_sujeira_hot_spot = 10
+    probabilidade_de_sujeira = 0.0005
+    probabilidade_de_sujeira_hot_spot = 0.15
 
     def __init__(self, tamanho_sala, posicoes_obstaculos, posicoes_hot_spots,
                  aspirador, posicao_aspirador, posicao_carregador):
-        linhas = tamanho_sala[0]
-        colunas = tamanho_sala[1]
         self.agente = aspirador
-        self.piso = np.zeros([linhas, colunas], int)
-        self.posicao_agente = list(posicao_aspirador)
+        self.piso = np.zeros(tamanho_sala, int)
+        self.posicao_agente = posicao_aspirador
         self.posicoes_hot_spots = posicoes_hot_spots
-        self.posicao_carregador = list(posicao_carregador)
+        self.posicao_carregador = posicao_carregador
         self.agente.adiciona_posicao_carregador(posicao_carregador[0], posicao_carregador[1])
         self.adicionar_obstaculos(posicoes_obstaculos)
 
@@ -40,15 +36,15 @@ class Sala:
         """Coloca sujeira nas células da sala aleatoriamente"""
         for l in range(len(self.piso)):
             for c in range(len(self.piso[0])):
-                celula_eh_obstaculo = self.piso[l][c] == self.obstaculo
-                eh_hot_spot = [l, c] in self.posicoes_hot_spots
+                celula_eh_obstaculo = self.piso[l][c] == OBSTACULO
+                eh_hot_spot = (l, c) in self.posicoes_hot_spots
                 if not celula_eh_obstaculo:
                     if self.celula_vai_ter_sujeira(eh_hot_spot):
                         self.adicionar_sujeira(l, c)
 
     def celula_vai_ter_sujeira(self, hot_spot):
         """Sorteia se uma celula terá sujeira ou não"""
-        numero_sorteado = np.random.randint(0, 100)
+        numero_sorteado = random()#np.random.randint(0, 100)
         if hot_spot:
             return numero_sorteado <= self.probabilidade_de_sujeira_hot_spot
         else:
@@ -94,6 +90,7 @@ class Sala:
 
         sala = self.gerar_representacao_sala(self.calcula_coordenadas_percepcao(self.posicao_agente[0], self.posicao_agente[1]))
         agente = self.agente.gerar_status(self.calcula_coordenadas_percepcao(self.posicao_agente[0], self.posicao_agente[1]))
+        self.sujar_sala()
         return sala, agente
 
     def run(self, steps=50):
@@ -103,7 +100,7 @@ class Sala:
         for step in range(steps):
             if self.agente.bateria <= 0:
                 return
-            self.sujar_sala()
+            
             sala, agente = self.step()
             self.imprimir_estado_simulacao(sala, agente, step)
 
@@ -119,12 +116,15 @@ class Sala:
             self.posicao_agente, self.direcao_do_aspirador = list(agente.mover(action))
 
         elif action == "limpar":
-            linha = agente.posicao[0]
-            coluna = agente.posicao[1]
+            linha = agente.linha
+            coluna = agente.coluna
             estado_do_piso = self.recuperar_estado_celula(linha, coluna)
-            if estado_do_piso == self.sujeira:
+            if estado_do_piso == PISO_SUJO:
                 self.remover_sujeira(linha, coluna)
                 agente.limpar(estado_do_piso)
+        
+        elif action == "recarregar":
+            self.agente.recarregar()
 
     def imprimir_estado_simulacao(self, representacao_sala, representacao_agente, step):
         print(gerar_titulo(f"Step {step}", (len(self.piso[0]) + 2) * 3))
