@@ -29,6 +29,7 @@ class Aspirador:
         self.contadores = np.zeros((linhas, colunas), int)
         self.posicao_carregador = ()
         self.possiveis_hotspots = []
+        self.ultima_posicao = [0,0]
 
     def get_posicao(self):
         return (self.linha, self.coluna)
@@ -68,6 +69,8 @@ class Aspirador:
             return "limpar"
 
         if self.get_bateria() <= 40:
+            if self.get_bateria() == 40:
+                self.ultima_posicao = self.get_posicao()
             self.descarregando = True
             self.desviando = True
             self.rota_desvio = self.bfs(self.get_posicao(), self.posicao_carregador)
@@ -75,7 +78,15 @@ class Aspirador:
                 movimento = self.desviar()
                 return movimento
 
+        if self.get_bateria() == 100 and self.ultima_posicao != (0, 0):
+            self.desviando = True
+            self.rota_desvio = self.bfs(self.get_posicao(), self.ultima_posicao)
+            if self.rota_desvio != []:
+                movimento = self.desviar()
+                return movimento
+
         if self.rota_desvio == []:
+            self.ultima_posicao = (0, 0)
             movimento = self.zigue_zague()
             self.desviando = False
 
