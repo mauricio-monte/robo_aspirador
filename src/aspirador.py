@@ -22,6 +22,7 @@ class Aspirador:
     capacidade_bateria = 0
     limpezas_efetuadas = 0
     modo_operacao = "exploração"
+    executando_rota_limpeza = False
 
     def __init__(self, bateria, linhas, colunas):
         self.capacidade_bateria = bateria
@@ -63,14 +64,25 @@ class Aspirador:
     def program(self, percepcao):
         """Retorna a próxima ação do agente com nas suas percepções
         e no seu estado atual"""
+
+        if self.modo_operacao == "limpeza":
+            if self.executando_rota_limpeza:
+                self.rota_limpeza = self.calcular_rota_limpeza()
+                self.rota_desvio = self.bfs(self.get_posicao(), self.posicao_carregador) + self.rota_limpeza
+                self.executando_rota_limpeza = False
+                        
         self.atualiza_modelo_interno(percepcao)
         if self.limpezas_efetuadas >= 15 and self.modo_operacao == "exploração":
             self.modo_operacao = "limpeza"
             self.possiveis_hotspots = self.calcular_possiveis_hotspots()
-            self.rota_limpeza = self.calcular_rota_limpeza()
+            # self.rota_limpeza = self.calcular_rota_limpeza()
             print("self.possiveis_hotspots", self.possiveis_hotspots)
             print("self.rota_limpeza:", self.rota_limpeza)
-            exit()
+            
+            self.rota_limpeza = self.calcular_rota_limpeza()
+            self.rota_desvio = self.bfs(self.get_posicao(), self.posicao_carregador) + self.rota_limpeza
+            
+            # exit()
 
         if self.posicao_carregador == self.get_posicao() and self.get_bateria() <= 50:
             return "recarregar"
@@ -78,12 +90,15 @@ class Aspirador:
         if percepcao["atual"] == PISO_SUJO and not self.descarregando:
             return "limpar"
 
-        if self.get_bateria() <= 40:
-            if self.get_bateria() == 40:
+        if self.get_bateria() <= 30:
+            if self.get_bateria() == 30:
                 self.ultima_posicao = self.get_posicao()
             self.descarregando = True
             self.desviando = True
-            self.rota_desvio = self.bfs(self.get_posicao(), self.posicao_carregador)
+            if self.executando_rota_limpeza:
+                self.rota_desvio = self.bfs(self.get_posicao(), self.posicao_carregador) + self.rota_desvio
+            else:
+                self.rota_desvio = self.bfs(self.get_posicao(), self.posicao_carregador)
             if self.rota_desvio != []:
                 movimento = self.desviar()
                 return movimento
@@ -123,7 +138,7 @@ class Aspirador:
         linha_obstaculo = posicao_obstaculo[0]
         coluna_obstaculo = posicao_obstaculo[1]
         obstaculo_esta_no_limite_horizontal = coluna_obstaculo in {0, len(self.modelo_interno[0]) - 1}
-        obstaculo_limite_vertical = linha_obstaculo in {0, len(self.modelo_interno[0])}
+        # obstaculo_limite_vertical = linha_obstaculo in {0, len(self.modelo_interno[0])}
 
         if movimento in ["baixo", "cima"] and obstaculo_esta_no_limite_horizontal:
             return "inicio"
@@ -131,10 +146,10 @@ class Aspirador:
             return "fim"
         elif movimento in {"esquerda", "direita"} and not obstaculo_esta_no_limite_horizontal:
             return "meio"
-        elif movimento in ["baixo", "cima"] and not obstaculo_limite_vertical:
-            return "tá descendo ou subindo"
-        elif movimento in ["baixo", "cima"] and obstaculo_limite_vertical:
-            return "tá no limite em cima ou embaixo"
+        # elif movimento in ["baixo", "cima"] and not obstaculo_limite_vertical:
+        #     return "tá descendo ou subindo"
+        # elif movimento in ["baixo", "cima"] and obstaculo_limite_vertical:
+        #     return "tá no limite em cima ou embaixo"
             
     def calcula_destino(self, linha, coluna, movimento, tipo_desvio):
         """Retorna qual posição final de uma rota de desvio"""
@@ -258,6 +273,8 @@ class Aspirador:
 
     def recarregar(self):
         if self.posicao_carregador == self.get_posicao():
+            if self.modo_operacao == "limpeza":
+                self.executando_rota_limpeza = True
             self.bateria = self.capacidade_bateria
             self.descarregando = False
             self.desviando = False
@@ -278,7 +295,7 @@ class Aspirador:
             celulas_ordenadas.append((coord, limpezas_celulas[coord]))
         
         maior_limpeza = celulas_ordenadas[0][1]
-        hotspots = list(filter(lambda x: x[1] >= (maior_limpeza - 2), celulas_ordenadas))
+        hotspots = list(filter(lambda x: x[1] >= (maior_limpeza - 2) and x[1]!=0, celulas_ordenadas))
         hotspots = list(zip(*hotspots))
         return list(hotspots[0])
 
