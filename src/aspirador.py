@@ -31,6 +31,7 @@ class Aspirador:
         self.contadores = np.zeros((linhas, colunas), int)
         self.posicao_carregador = ()
         self.possiveis_hotspots = []
+        self.rota_limpeza = []
         self.ultima_posicao = (0,0)
 
     def get_posicao(self):
@@ -66,7 +67,9 @@ class Aspirador:
         if self.limpezas_efetuadas >= 15 and self.modo_operacao == "exploração":
             self.modo_operacao = "limpeza"
             self.possiveis_hotspots = self.calcular_possiveis_hotspots()
-            print(self.possiveis_hotspots)
+            self.rota_limpeza = self.calcular_rota_limpeza()
+            print("self.possiveis_hotspots", self.possiveis_hotspots)
+            print("self.rota_limpeza:", self.rota_limpeza)
             exit()
 
         if self.posicao_carregador == self.get_posicao() and self.get_bateria() <= 50:
@@ -278,6 +281,17 @@ class Aspirador:
         hotspots = list(filter(lambda x: x[1] >= (maior_limpeza - 2), celulas_ordenadas))
         hotspots = list(zip(*hotspots))
         return list(hotspots[0])
+
+    def calcular_rota_limpeza(self):
+        inicio = self.posicao_carregador
+        caminho = [inicio]
+
+        for hotspot in self.possiveis_hotspots:
+            caminho.extend(self.bfs(inicio, hotspot))
+            inicio = hotspot
+
+        caminho.extend(self.bfs(inicio, self.posicao_carregador))
+        return caminho
 
     def gerar_status(self, coordenadas_percepcao):
         """Cria representação da posição do agente, modelo interno do ambiente e os contadores"""
