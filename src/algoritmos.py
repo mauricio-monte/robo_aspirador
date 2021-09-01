@@ -77,6 +77,9 @@ def zigue_zague(posicao_atual, ultima_movimentacao_executada, direcao, modelo_in
 
 
 def algoritmo_bfs(inicio, destino, sala):
+    print("inicio", inicio)
+    print("destino", destino)
+
     # sr = source row (linha do node inicio) sc = source column
     sr, sc = inicio[0], inicio[1]
     prev = solve(sr, sc, destino, sala)
@@ -125,7 +128,7 @@ def explore_neighbours(r, c, celulas_visitadas, rq, cq, prev, sala):
 def solve(sr, sc, fim, sala):
     chegou_ao_fim = False
     # Tem que ser do tamanho da sala
-    celulas_visitadas = np.zeros([10,10])
+    celulas_visitadas = np.zeros([len(sala),len(sala[0])])
     # rq = fila_linha, cq = fila_coluna
     fila_linha = Queue()
     fila_coluna = Queue()
@@ -136,7 +139,7 @@ def solve(sr, sc, fim, sala):
     celulas_visitadas[sr][sc] = True
     
     # Cada chave é uma célula e o valor é a célula anterior que levou a exploração da célula da chave
-    prev = {(lin, col): None for lin in range(10) for col in range(10)}    
+    prev = {(lin, col): None for lin in range(len(sala)) for col in range(len(sala[0]))}    
 
     while fila_linha.qsize() > 0:
         lin = fila_linha.get()
