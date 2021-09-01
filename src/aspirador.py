@@ -64,9 +64,13 @@ class Aspirador:
     def program(self, percepcao):
         """Retorna a próxima ação do agente com nas suas percepções
         e no seu estado atual"""
+        self.atualiza_modelo_interno(percepcao)
+
+        # Volta para o zigue-zague quando terminar a rota de limpeza
         if self.rota_limpeza == []:
             self.executando_rota_limpeza = False
-            
+
+        # Para de fazer zigue zague e executa a rota de limpeza
         if self.modo_operacao == "limpeza":
             if not self.executando_rota_limpeza:
                 self.contador+=1
@@ -76,9 +80,7 @@ class Aspirador:
                 self.rota_limpeza = self.calcular_rota_limpeza()
                 self.rota_desvio = self.bfs(self.get_posicao(), self.posicao_carregador) + self.rota_limpeza
                 self.executando_rota_limpeza = True
-                self.contador = 0
-                        
-        self.atualiza_modelo_interno(percepcao)
+                self.contador = 0       
 
         # Faz mudar o modo de operação
         if self.limpezas_efetuadas >= LIMPEZAS_NECESSARIAS_PARA_ENCERRAR_EXPLORACAO and self.modo_operacao == "exploração":
@@ -128,7 +130,7 @@ class Aspirador:
             self.desviando = False
 
             # Se for colidir, calcular desvio
-            if self.checar_colisao_obstaculos(movimento):
+            if self.checar_colisao_obstaculos(self.linha, self.coluna, movimento):
                 tipo_desvio = self.calcula_tipo_desvio(movimento)
                 destino = self.calcula_destino(self.linha, self.coluna, movimento, tipo_desvio)     
                 self.rota_desvio = self.bfs(self.get_posicao(), destino)
@@ -173,13 +175,21 @@ class Aspirador:
 
             destino = self.simulacao_movimento(linha, coluna, movimento)
             destino = self.simulacao_movimento(destino[0], destino[1], direcao)
-            self.ultima_movimentacao_executada = direcao
+
+            if self.checar_colisao_obstaculos(destino[0], destino[1], direcao):
+                _, prox_movimento = zigue_zague(destino, direcao, self.direcao, self.modelo_interno)
+                destino = self.calcula_destino(destino[0], destino[1], prox_movimento, "inicio")                
+
+            else:
+                self.ultima_movimentacao_executada = direcao
+
+
 
         elif tipo_desvio == "meio":
             destino = self.simulacao_movimento(linha, coluna, movimento)
             destino = self.simulacao_movimento(destino[0], destino[1], movimento)
 
-            if self.modelo_interno[destino[0]][destino[1]] == OBSTACULO: 
+            if self.checar_colisao_obstaculos(destino[0], destino[1], movimento):
                 destino = self.calcula_destino(destino[0], destino[1], movimento, tipo_desvio)
 
         elif tipo_desvio == "fim":
@@ -203,9 +213,9 @@ class Aspirador:
 
         return movimentos[movimento]
 
-    def checar_colisao_obstaculos(self, movimento):
+    def checar_colisao_obstaculos(self, linha, coluna, movimento):
         """Simula o movimento a ser executado e verifica se haveria colisão com um obstáculo"""
-        proxima_posicao = self.simulacao_movimento(self.linha, self.coluna, movimento)
+        proxima_posicao = self.simulacao_movimento(linha, coluna, movimento)
         valor_celula = self.modelo_interno[proxima_posicao[0]][proxima_posicao[1]]
 
         if valor_celula == OBSTACULO:
@@ -235,9 +245,11 @@ class Aspirador:
 
         return proximo_movimento
 
+
     def bfs(self, origem, destino):
         caminho = algoritmo_bfs(origem, destino, self.modelo_interno)
         return caminho
+
 
     def zigue_zague(self):
         nova_direcao, proximo_movimento = zigue_zague(self.get_posicao(),
@@ -246,6 +258,7 @@ class Aspirador:
         self.direcao = nova_direcao
         return proximo_movimento
         
+
     def mover(self, acao):
         if self.bateria <= 0:
             return
@@ -266,6 +279,7 @@ class Aspirador:
             self.ultima_movimentacao_executada = acao
         self.bateria -= 1
         return self.get_posicao()
+
 
     def limpar(self, estado_do_piso):
         if self.bateria > 5:

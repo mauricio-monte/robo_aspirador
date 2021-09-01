@@ -14,7 +14,7 @@ def teste_professor():
     ambiente  = Sala((M,N), [(5,5),(5,4),(5,3)],[(2,2),(3,3)], meu_aspirador, (0,0), (0,0))
 
     #sumila 100 passos do ambiente
-    ambiente.run(100)
+    ambiente.run(500)
 
 
 def teste_nosso():
@@ -23,8 +23,8 @@ def teste_nosso():
     meu_aspirador = Aspirador(100, M, N)
     posicao_aspirador = (0,0)
     posicao_base_carregador = (4,5)
-    posicao_obstaculos = [(5,5),(5,4),(5,3)]
-    posicao_hotspots = [(2,2),(3,3)]
+    posicao_obstaculos = [(5,5),(5,4),(5,3), (1,9), (2,0)]
+    posicao_hotspots = [(2,2),(3,3), (2,3), (7,7)]
     ambiente  = Sala((M,N), posicao_obstaculos, posicao_hotspots, meu_aspirador, posicao_aspirador, posicao_base_carregador)
     ambiente.run(400)
 
