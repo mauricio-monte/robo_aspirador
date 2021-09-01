@@ -123,7 +123,7 @@ class Sala:
         sala = self.gerar_representacao_sala()
         agente = self.agente.gerar_status()
         print(gerar_titulo(f"Step {step}", (len(self.piso[0]) + 2) * 3))
-        print(f'Agente: (x={self.posicao_agente[1]}, y={self.posicao_agente[0]}) Bateria: {self.agente.bateria}')
+        print(f'Agente: (Linha = {self.posicao_agente[0]}, Coluna = {self.posicao_agente[1]}) / Modo = {self.agente.modo_operacao} / Bateria = {self.agente.bateria}')
         print(concatenar_representacoes(sala, agente))
         time.sleep(0.1)
 
