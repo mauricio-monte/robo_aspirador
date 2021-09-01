@@ -31,6 +31,7 @@ class Aspirador:
     limpezas_efetuadas = 0
     modo_operacao = "exploração"
     executando_rota_limpeza = False
+    contador = 0
 
     def __init__(self, bateria, linhas, colunas):
         self.capacidade_bateria = bateria
@@ -63,24 +64,29 @@ class Aspirador:
     def program(self, percepcao):
         """Retorna a próxima ação do agente com nas suas percepções
         e no seu estado atual"""
-
+        if self.rota_limpeza == []:
+            self.executando_rota_limpeza = False
+            
         if self.modo_operacao == "limpeza":
-            if self.executando_rota_limpeza:
+            if not self.executando_rota_limpeza:
+                self.contador+=1
+
+            if self.contador>=100 and not self.executando_rota_limpeza:
+                self.possiveis_hotspots = self.calcular_possiveis_hotspots()
                 self.rota_limpeza = self.calcular_rota_limpeza()
                 self.rota_desvio = self.bfs(self.get_posicao(), self.posicao_carregador) + self.rota_limpeza
-                self.executando_rota_limpeza = False
+                self.executando_rota_limpeza = True
+                self.contador = 0
                         
         self.atualiza_modelo_interno(percepcao)
 
         # Faz mudar o modo de operação
         if self.limpezas_efetuadas >= LIMPEZAS_NECESSARIAS_PARA_ENCERRAR_EXPLORACAO and self.modo_operacao == "exploração":
             self.modo_operacao = "limpeza"
-            self.possiveis_hotspots = self.calcular_possiveis_hotspots()
+            self.possiveis_hotspots = self.calcular_possiveis_hotspots()            
             self.rota_limpeza = self.calcular_rota_limpeza()
-            
-            print("self.possiveis_hotspots", self.possiveis_hotspots)
-            print("self.rota_limpeza:", self.rota_limpeza)
             self.rota_desvio = self.bfs(self.get_posicao(), self.posicao_carregador) + self.rota_limpeza
+            self.executando_rota_limpeza = True
 
         # Recarrega, a menos que esteja com uma bateria muito cheia
         if self.posicao_carregador == self.get_posicao() and self.get_bateria() <= BATERIA_POUCO_GASTA:
@@ -93,16 +99,19 @@ class Aspirador:
         # Parar zigue-zague e ir direto para o carregador
         if self.get_bateria() <= BATERIA_BAIXA and not self.descarregando:
             self.ultima_posicao = self.get_posicao()
-            print("self.ultima_posicao:", self.ultima_posicao)
             self.descarregando = True
             self.desviando = True
-            self.rota_desvio = self.bfs(self.get_posicao(), self.posicao_carregador)
+            if self.executando_rota_limpeza:
+                self.rota_desvio = self.bfs(self.get_posicao(), self.posicao_carregador) + self.rota_desvio
+                self.rota_limpeza = self.rota_desvio
+            else:
+                self.rota_desvio = self.bfs(self.get_posicao(), self.posicao_carregador)
+            
             movimento = self.desviar() # executa o primeiro movimento do desvio
             return movimento
 
         # Fazer desvio para retornar ao zigue-zague, depois de ter carregado
         if self.get_bateria() > BATERIA_POUCO_GASTA and self.descarregando:
-            print("retornando ao zigue-zague")
             self.desviando = True
             self.descarregando = False
             self.rota_desvio = self.bfs(self.get_posicao(), self.ultima_posicao)
@@ -111,6 +120,10 @@ class Aspirador:
 
         # Executa movimentação normal
         if self.rota_desvio == []:
+            #Teste
+            self.executando_rota_limpeza = False
+            self.rota_limpeza = []
+
             movimento = self.zigue_zague()
             self.desviando = False
 
@@ -204,6 +217,10 @@ class Aspirador:
         """Retorna qual a próxima movimentação a ser feita para executar a rota de desvio"""
         destino = self.rota_desvio[0]
 
+        if self.executando_rota_limpeza:
+            if destino in self.rota_limpeza:
+                self.rota_limpeza.remove(destino)
+
         proximo_movimento = ""
         if destino == cima(*self.get_posicao()):
             proximo_movimento = "cima"
@@ -283,7 +300,7 @@ class Aspirador:
             celulas_ordenadas.append((coord, limpezas_celulas[coord]))
         
         maior_limpeza = celulas_ordenadas[0][1]
-        hotspots = list(filter(lambda x: x[1] >= (maior_limpeza - 2) and x[1]!=0, celulas_ordenadas))
+        hotspots = list(filter(lambda x: x[1] >= (maior_limpeza/2.0) and x[1]!=0, celulas_ordenadas))
         hotspots = list(zip(*hotspots))
         return list(hotspots[0])
 
