@@ -78,31 +78,24 @@ class Sala:
             "esquerda": self.recuperar_estado_celula(linha, coluna - 1)
         }
 
-    def calcula_coordenadas_percepcao(self, linha, coluna):
-        """Retorna as posições das células dentro da percepção do agente"""
-        return [[linha - 1, coluna], [linha, coluna + 1], [linha + 1, coluna], [linha, coluna - 1]]
-
     def step(self):
         """Executa um passo da simulação do ambiente"""
         estado_pisos_percepcao = self.percept(self.posicao_agente)
         acao_agente = self.agente.program(estado_pisos_percepcao)
         self.executar_acao(self.agente, acao_agente)
-
-        sala = self.gerar_representacao_sala(self.calcula_coordenadas_percepcao(self.posicao_agente[0], self.posicao_agente[1]))
-        agente = self.agente.gerar_status(self.calcula_coordenadas_percepcao(self.posicao_agente[0], self.posicao_agente[1]))
         self.sujar_sala()
-        return sala, agente
+
 
     def run(self, steps=50):
         """Chama step N vezes para simular o agente e o seu ambiente"""
-        self.imprimir_estado_simulacao(self.gerar_representacao_sala([]), self.agente.gerar_status([]), "Estado Inicial")
+        self.imprimir_estado_simulacao("Estado Inicial")
 
         for step in range(steps):
             if self.agente.bateria <= 0:
                 return
             
-            sala, agente = self.step()
-            self.imprimir_estado_simulacao(sala, agente, step)
+            self.step()
+            self.imprimir_estado_simulacao(step)
 
     def executar_acao(self, agente, action):
         """Muda o estado do ambiente de acordo com as ações executadas pelo agente"""
@@ -126,13 +119,15 @@ class Sala:
         elif action == "recarregar":
             self.agente.recarregar()
 
-    def imprimir_estado_simulacao(self, representacao_sala, representacao_agente, step):
+    def imprimir_estado_simulacao(self, step):
+        sala = self.gerar_representacao_sala()
+        agente = self.agente.gerar_status()
         print(gerar_titulo(f"Step {step}", (len(self.piso[0]) + 2) * 3))
         print(f'Agente: (x={self.posicao_agente[1]}, y={self.posicao_agente[0]}) Bateria: {self.agente.bateria}')
-        print(concatenar_representacoes(representacao_sala, representacao_agente))
+        print(concatenar_representacoes(sala, agente))
         time.sleep(0.1)
 
-    def gerar_representacao_sala(self, percepcao_agente):
+    def gerar_representacao_sala(self):
         representacao = gerar_cabecalho_matriz("Sala", len(self.piso[0]))
 
         for l, linha in enumerate(self.piso):
@@ -142,7 +137,7 @@ class Sala:
                 representacao_celula = colorir_celula(
                     l, c, valor_celula,
                     self.posicao_agente, self.posicao_carregador,
-                    self.posicoes_hot_spots, percepcao_agente)
+                    self.posicoes_hot_spots)
                 representacao += representacao_celula
             representacao += "|\n"
 

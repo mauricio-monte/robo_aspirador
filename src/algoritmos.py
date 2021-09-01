@@ -77,9 +77,6 @@ def zigue_zague(posicao_atual, ultima_movimentacao_executada, direcao, modelo_in
 
 
 def algoritmo_bfs(inicio, destino, sala):
-    print("inicio", inicio)
-    print("destino", destino)
-
     # sr = source row (linha do node inicio) sc = source column
     sr, sc = inicio[0], inicio[1]
     prev = solve(sr, sc, destino, sala)

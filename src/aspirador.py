@@ -334,14 +334,14 @@ class Aspirador:
         self.posicao_carregador = (linha, coluna)
 
 
-    def gerar_status(self, coordenadas_percepcao):
+    def gerar_status(self):
         """Cria representação da posição do agente, modelo interno do ambiente e os contadores"""
-        representacao_modelo_interno = self.gerar_representacao_agente(coordenadas_percepcao)
+        representacao_modelo_interno = self.gerar_representacao_agente()
         representacao_contadores = self.gerar_representacao_contadores()
         return concatenar_representacoes(representacao_modelo_interno, representacao_contadores)
 
 
-    def gerar_representacao_agente(self, coordenadas_percepcao):
+    def gerar_representacao_agente(self):
         representacao = gerar_cabecalho_matriz("Modelo Interno do Agente", len(self.modelo_interno[0]))
 
         for l, linha in enumerate(self.modelo_interno):
@@ -350,7 +350,7 @@ class Aspirador:
                 valor_celula = self.modelo_interno[l][c]
                 representacao_celula = colorir_celula(l, c, valor_celula,
                                                       self.get_posicao(), self.posicao_carregador,
-                                                      self.possiveis_hotspots, coordenadas_percepcao)
+                                                      self.possiveis_hotspots)
                 representacao += representacao_celula
             representacao += "|\n"
         
