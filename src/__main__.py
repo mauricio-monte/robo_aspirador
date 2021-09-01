@@ -9,7 +9,7 @@ from testes import (
 
 
 def main():
-    teste_nosso()
+    teste_professor()
 
 
 if __name__ == '__main__':

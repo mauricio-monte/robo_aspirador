@@ -35,7 +35,7 @@ def colorir_celula(linha, coluna, valor_celula,
     if (linha, coluna) == posicao_carregador:
         cor += Cores.bgMagenta
     if valor_celula == OBSTACULO:
-        cor += Formatacao.reversed
+        cor += Cores.bgBlue
     if valor_celula == NAO_EXPLORADO:
         cor += Cores.fgCyan
         return cor + " " + "?" + " " + Cores.reset

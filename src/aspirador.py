@@ -7,7 +7,15 @@ from exibicao import (
 )
 from utils import cima, baixo, direita, esquerda
 from algoritmos import algoritmo_bfs, zigue_zague
-from constantes import (PISO_LIMPO, OBSTACULO, PISO_SUJO, NAO_EXPLORADO)
+from constantes import (
+    PISO_LIMPO,
+    OBSTACULO,
+    PISO_SUJO,
+    NAO_EXPLORADO,
+    BATERIA_BAIXA,
+    BATERIA_POUCO_GASTA,
+    LIMPEZAS_NECESSARIAS_PARA_ENCERRAR_EXPLORACAO
+)
 
 
 class Aspirador:
@@ -35,15 +43,6 @@ class Aspirador:
         self.rota_limpeza = []
         self.ultima_posicao = (0,0)
 
-    def get_posicao(self):
-        return (self.linha, self.coluna)
-
-    def set_posicao(self, linha, coluna):
-        self.limpar = linha
-        self.coluna = coluna
-
-    def get_bateria(self):
-        return self.bateria
 
     def atualiza_modelo_interno(self, percepcao):
         """Atualiza o modelo interno do ambiente que o agente possui"""
@@ -72,73 +71,74 @@ class Aspirador:
                 self.executando_rota_limpeza = False
                         
         self.atualiza_modelo_interno(percepcao)
-        if self.limpezas_efetuadas >= 15 and self.modo_operacao == "exploração":
+
+        # Faz mudar o modo de operação
+        if self.limpezas_efetuadas >= LIMPEZAS_NECESSARIAS_PARA_ENCERRAR_EXPLORACAO and self.modo_operacao == "exploração":
             self.modo_operacao = "limpeza"
             self.possiveis_hotspots = self.calcular_possiveis_hotspots()
-            # self.rota_limpeza = self.calcular_rota_limpeza()
+            self.rota_limpeza = self.calcular_rota_limpeza()
+            
             print("self.possiveis_hotspots", self.possiveis_hotspots)
             print("self.rota_limpeza:", self.rota_limpeza)
-            
-            self.rota_limpeza = self.calcular_rota_limpeza()
             self.rota_desvio = self.bfs(self.get_posicao(), self.posicao_carregador) + self.rota_limpeza
-            
-            # exit()
 
-        if self.posicao_carregador == self.get_posicao() and self.get_bateria() <= 50:
+        # Recarrega, a menos que esteja com uma bateria muito cheia
+        if self.posicao_carregador == self.get_posicao() and self.get_bateria() <= BATERIA_POUCO_GASTA:
             return "recarregar"
 
+        # Limpa o piso, se não tiver com bateria muito baixa 
         if percepcao["atual"] == PISO_SUJO and not self.descarregando:
             return "limpar"
 
-        if self.get_bateria() <= 30:
-            if self.get_bateria() == 30:
-                self.ultima_posicao = self.get_posicao()
+        # Parar zigue-zague e ir direto para o carregador
+        if self.get_bateria() <= BATERIA_BAIXA and not self.descarregando:
+            self.ultima_posicao = self.get_posicao()
+            print("self.ultima_posicao:", self.ultima_posicao)
             self.descarregando = True
             self.desviando = True
-            if self.executando_rota_limpeza:
-                self.rota_desvio = self.bfs(self.get_posicao(), self.posicao_carregador) + self.rota_desvio
-            else:
-                self.rota_desvio = self.bfs(self.get_posicao(), self.posicao_carregador)
-            if self.rota_desvio != []:
-                movimento = self.desviar()
-                return movimento
+            self.rota_desvio = self.bfs(self.get_posicao(), self.posicao_carregador)
+            movimento = self.desviar() # executa o primeiro movimento do desvio
+            return movimento
 
-        if self.get_bateria() == 100 and self.ultima_posicao != (0, 0):
+        # Fazer desvio para retornar ao zigue-zague, depois de ter carregado
+        if self.get_bateria() > BATERIA_POUCO_GASTA and self.descarregando:
+            print("retornando ao zigue-zague")
             self.desviando = True
+            self.descarregando = False
             self.rota_desvio = self.bfs(self.get_posicao(), self.ultima_posicao)
-            if self.rota_desvio != []:
-                movimento = self.desviar()
-                return movimento
+            movimento = self.desviar() # executa o primeiro movimento do desvio
+            return movimento
 
+        # Executa movimentação normal
         if self.rota_desvio == []:
-            self.ultima_posicao = (0, 0)
             movimento = self.zigue_zague()
             self.desviando = False
 
+            # Se for colidir, calcular desvio
             if self.checar_colisao_obstaculos(movimento):
                 tipo_desvio = self.calcula_tipo_desvio(movimento)
                 destino = self.calcula_destino(self.linha, self.coluna, movimento, tipo_desvio)     
                 self.rota_desvio = self.bfs(self.get_posicao(), destino)
-                movimento = self.desviar()
                 self.desviando = True
+                movimento = self.desviar() # executa o primeiro movimento do desvio
         else:
+            # Executa rota de desvio
             movimento = self.desviar()
 
         return movimento
 
+
     def calcula_posicao_obstaculo(self, movimento):
         posicao_obstaculo = self.simulacao_movimento(self.linha, self.coluna, movimento)
-       
         return posicao_obstaculo
+
 
     def calcula_tipo_desvio(self, movimento):
         """Calcula se o obstáculo está no início, meio ou final de uma linha/coluna"""
         posicao_obstaculo = self.calcula_posicao_obstaculo(movimento)
         
-        linha_obstaculo = posicao_obstaculo[0]
         coluna_obstaculo = posicao_obstaculo[1]
         obstaculo_esta_no_limite_horizontal = coluna_obstaculo in {0, len(self.modelo_interno[0]) - 1}
-        # obstaculo_limite_vertical = linha_obstaculo in {0, len(self.modelo_interno[0])}
 
         if movimento in ["baixo", "cima"] and obstaculo_esta_no_limite_horizontal:
             return "inicio"
@@ -146,11 +146,8 @@ class Aspirador:
             return "fim"
         elif movimento in {"esquerda", "direita"} and not obstaculo_esta_no_limite_horizontal:
             return "meio"
-        # elif movimento in ["baixo", "cima"] and not obstaculo_limite_vertical:
-        #     return "tá descendo ou subindo"
-        # elif movimento in ["baixo", "cima"] and obstaculo_limite_vertical:
-        #     return "tá no limite em cima ou embaixo"
-            
+
+
     def calcula_destino(self, linha, coluna, movimento, tipo_desvio):
         """Retorna qual posição final de uma rota de desvio"""
         destino = []
@@ -169,7 +166,6 @@ class Aspirador:
             destino = self.simulacao_movimento(linha, coluna, movimento)
             destino = self.simulacao_movimento(destino[0], destino[1], movimento)
 
-            # funciona apenas para desvios de zigue zague
             if self.modelo_interno[destino[0]][destino[1]] == OBSTACULO: 
                 destino = self.calcula_destino(destino[0], destino[1], movimento, tipo_desvio)
 
@@ -252,7 +248,7 @@ class Aspirador:
         if not self.desviando:
             self.ultima_movimentacao_executada = acao
         self.bateria -= 1
-        return self.get_posicao(), acao
+        return self.get_posicao()
 
     def limpar(self, estado_do_piso):
         if self.bateria > 5:
@@ -265,21 +261,13 @@ class Aspirador:
         return False
         
 
-    # realizar busca heurística usando a avaliação heurística, o modelo do ambiente e a percepção corrente.
-    # considerar que ele deve retornar à base quando a bateria estiver crítica
-
-    def adiciona_posicao_carregador(self, linha, coluna):
-        self.posicao_carregador = (linha, coluna)
 
     def recarregar(self):
         if self.posicao_carregador == self.get_posicao():
-            if self.modo_operacao == "limpeza":
-                self.executando_rota_limpeza = True
             self.bateria = self.capacidade_bateria
-            self.descarregando = False
-            self.desviando = False
             return True
         return False
+
 
     def calcular_possiveis_hotspots(self):
         limpezas_celulas = {(lin, col): 0 for lin in range(10) for col in range(10)}
@@ -299,6 +287,7 @@ class Aspirador:
         hotspots = list(zip(*hotspots))
         return list(hotspots[0])
 
+
     def calcular_rota_limpeza(self):
         inicio = self.posicao_carregador
         caminho = [inicio]
@@ -310,11 +299,30 @@ class Aspirador:
         caminho.extend(self.bfs(inicio, self.posicao_carregador))
         return caminho
 
+
+    def get_posicao(self):
+        return (self.linha, self.coluna)
+
+
+    def set_posicao(self, linha, coluna):
+        self.linha = linha
+        self.coluna = coluna
+
+
+    def get_bateria(self):
+        return self.bateria
+
+
+    def adiciona_posicao_carregador(self, linha, coluna):
+        self.posicao_carregador = (linha, coluna)
+
+
     def gerar_status(self, coordenadas_percepcao):
         """Cria representação da posição do agente, modelo interno do ambiente e os contadores"""
         representacao_modelo_interno = self.gerar_representacao_agente(coordenadas_percepcao)
         representacao_contadores = self.gerar_representacao_contadores()
         return concatenar_representacoes(representacao_modelo_interno, representacao_contadores)
+
 
     def gerar_representacao_agente(self, coordenadas_percepcao):
         representacao = gerar_cabecalho_matriz("Modelo Interno do Agente", len(self.modelo_interno[0]))
@@ -330,6 +338,7 @@ class Aspirador:
             representacao += "|\n"
         
         return representacao
+
 
     def gerar_representacao_contadores(self):
         representacao = gerar_cabecalho_matriz("Contadores", len(self.contadores[0]))

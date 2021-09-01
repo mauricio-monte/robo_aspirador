@@ -44,7 +44,7 @@ class Sala:
 
     def celula_vai_ter_sujeira(self, hot_spot):
         """Sorteia se uma celula terá sujeira ou não"""
-        numero_sorteado = random()#np.random.randint(0, 100)
+        numero_sorteado = random()
         if hot_spot:
             return numero_sorteado <= self.probabilidade_de_sujeira_hot_spot
         else:
@@ -107,13 +107,13 @@ class Sala:
     def executar_acao(self, agente, action):
         """Muda o estado do ambiente de acordo com as ações executadas pelo agente"""
         if action == "cima":
-            self.posicao_agente, self.direcao_do_aspirador = list(agente.mover(action))
+            self.posicao_agente = list(agente.mover(action))
         elif action == "baixo":
-            self.posicao_agente, self.direcao_do_aspirador = list(agente.mover(action))
+            self.posicao_agente = list(agente.mover(action))
         elif action == "esquerda":
-            self.posicao_agente, self.direcao_do_aspirador = list(agente.mover(action))
+            self.posicao_agente = list(agente.mover(action))
         elif action == "direita":
-            self.posicao_agente, self.direcao_do_aspirador = list(agente.mover(action))
+            self.posicao_agente = list(agente.mover(action))
 
         elif action == "limpar":
             linha = agente.linha
