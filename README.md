@@ -17,7 +17,7 @@ Código da Atividade Prática 01 da disciplina de Inteligência Artificial
     2. Ativar ambiente virtual:   
         Para Unix/Mac OS
         ```
-        python3 -m venv venv
+        source venv/bin/activate
         ```  
         Para windows  
         ```
