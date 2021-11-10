@@ -1,6 +1,8 @@
 # robo_aspirador
 Código da Atividade Prática 01 da disciplina de Inteligência Artificial
 
+![Demo](img/robo_aspirador_demo.gif)
+> Os quadrados azuis são os obstáculos, os vermelhos são os hotspots, o roxo é o carregador e o verde é o aspirador.
 
 ## Para executar este projeto é necessário:
 1. Baixar este projeto no seu computador
